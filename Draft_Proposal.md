@@ -11,7 +11,7 @@
 The dataset for this research is sourced from Kaggle. The dataset contains information related to airline passenger satisfaction and has a shape of (103904, 25) where there are 103,904 rows and 25 columns.
 
 ## GitHub Repository
-Link to our team's GitHub repository for this research: [GitHub Repo Link](https://github.com/parv-bhargava/DATS_6101_13_mid_term_project)]
+Link to our team's GitHub repository for this research: [GitHub Repo Link](https://github.com/parv-bhargava/DATS_6101_13_mid_term_project)
 
 ## Additional Information
 In this research, we will conduct exploratory data analysis (EDA) to ensure the suitability of our dataset for modeling. Since the dependent variable is binary (satisfaction or neutral/dissatisfaction), we will focus on logistic regression modeling. However, we will also examine some assumptions related to the Gauss-Markov model.
