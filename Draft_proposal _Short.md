@@ -3,8 +3,8 @@
 ## Title
 Analyzing Factors Affecting Airline Passenger Satisfaction
 
-## SMART Question(s)
-- "To what extent can be predict airline passenger satisfaction with certain factors?"
+## SMART Question
+- To what extent can be predict airline passenger satisfaction with certain factors?
 
 ## Data Source
 The dataset for this research is sourced from Kaggle. The dataset contains information related to airline passenger satisfaction and has a shape of (103,904, 25) where there are 103,904 rows and 25 columns.
