@@ -4,8 +4,11 @@ author: "Jehan Bugli"
 date: "2023-10-15"
 output: 
   html_document:
-    fig_width: 14
-    fig_height: 6
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+   # fig_width: 14
+   # fig_height: 6
   
 ---
 ```{r init, include=F}
@@ -14,27 +17,29 @@ output:
 # Load the ezids package for functions like xkabledply(), xkablesummary(), uzscale(), etc.
 library(ezids)
 # Load package for "describe" function
-library("Hmisc")
+library(Hmisc)
 # Load ggplot2 package
 library(ggplot2)
 # Load dplyr package
 library(dplyr)
 # Load car package for VIF
 library(car)
-
+# Load corrplot package for correlation matrix visuals
+library(corrplot)
+# Load kableExtra package for ratings group table
+library(kableExtra)
+library(knitr)
 ```
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, warning = FALSE)
 ```
+<br>
+<br>
 
-## R Markdown
+## Raw Data and Filtering
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r import_data}
+```{r import_data, include = FALSE}
 # Get working directory
 getwd()
 # Import train.csv data as a data frame
@@ -46,7 +51,13 @@ header
 
 
 ```
-```{r filter_data}
+Responses for the ratings variables are coded as values from 1-5. However, some responses include 0, representing that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out. Fields for index number and survey ID are also removed.
+
+<br>
+
+The filtered dataset looks as follows:
+
+```{r filter_ratings, echo = FALSE}
 # Get unnecessary columns
 drop <- c("X","id")
 # Drop column names specified in vector
@@ -68,13 +79,27 @@ summary <- xkablesummary(data, title = "Summary of airline passenger dataset")
 summary
 ```
 
+<br>
+<br>
 
-## EDA: Ratings variables
 
-```{r ratings histogram}
+## Exploratory Data Analysis (EDA)
+
+<br>
+
+
+### EDA: Ratings variables
+
+<br>
+
+The dataset includes a large number of different ratings variables. Most variables have a mean response value centered around 3 points, but the distribution varies for each field.
+
+```{r ratings_histogram, fig.width = 15, fig.height = 10, echo = FALSE}
 
 # Define ratings subset of main data frame
 data_ratings <- data[7:20]
+
+describe(data_ratings)
 
 # Reshape the data into a long format
 data_long <- tidyr::gather(data_ratings, variable, value)
@@ -85,34 +110,149 @@ colors <- c(
   "brown", "violet", "turquoise", "pink"
 )
 
+commas <- function(x) {
+  format(x, big.mark = ",")
+}
 
 # Create a clustered histogram with color-separated columns
 ggplot(data_long, aes(x = value, fill = variable)) +
-  # geom_histogram(binwidth = 0.5, position = "dodge", alpha = 0.7, width = 10) +
-  geom_histogram(binwidth = 0.5, position = position_dodge(0.7), alpha = 0.7)
-  labs(x = "Value", y = "Frequency") +
-  scale_fill_manual(values = colors) +
-  theme_minimal()
+  geom_histogram(binwidth = 0.5, position = position_dodge(0.7), alpha = 0.7) +  # Create the histogram
+  labs(x = "\nValue", y = "Frequency\n") +  # Add axis labels
+  scale_fill_manual(values = colors) +  # Set custom colors
+  theme_minimal() +  # Apply a minimal theme
+  theme(
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines")
+  ) +
+  scale_y_continuous(labels = commas) + 
+  labs(fill = "Ratings Variables")
 ```
+<br>
 
-```{r ratings matrix, fig.width = 15, fig.height = 20}
+At first glance, many of the ratings included in the histogram appear to share similar frequency distributions, sparking multicollinearity concerns. Our next step to evaluate these potential relationships was to create a correlation matrix.
+
+<br>
+
+```{r ratings_matrix_initial, fig.width = 15, fig.height = 15, echo = FALSE}
   
 # Create a correlation matrix
-cor_matrix <- cor(data_ratings)
-
-# Visualize the correlation matrix
-loadPkg("corrplot") 
+cor_matrix_1 <- cor(data_ratings, method = 'spearman')
 
 corrplot.mixed(
-  cor_matrix,  
+  cor_matrix_1,  
   lower = "number",
   upper = "circle",
   tl.pos = "lt",
   tl.cex = 1,
-  title="Correlation Matrix for 5-Point Ratings", 
+  number.cex = 1,
+  cl.cex = 1.5,
+  title="Correlation Matrix for all 5-Point Ratings", 
+  cex.main = 2,
   
-  mar=c(0,0,1,0) # fixes the position of title 
+  mar=c(0,0,5,0) # fixes the position of title 
   
   ) 
 
+
 ```
+
+<br>
+
+We can see from the matrix that certain ratings variables have strong positive correlations with each other. If these are included in the model without adjustments, our model may suffer a loss in reliability.
+
+<br>
+
+In order to avoid this issue, we elected to combine ratings variables into two groups—based on the degree of correlation—and utilize average ratings from these two groups as model inputs.
+
+<br>
+
+| **Ratings Group 1: Pre-Flight & Wi-Fi** |
+| :------: |
+| In-Flight Wifi Service              |
+| Departure / Arrival Time            |
+| Ease of Online Booking              |
+| Gate Location                       |
+| Online Boarding                     |
+| ------                              |  
+
+<br>
+
+
+| **Ratings Group 2: In-Flight & Baggage** |
+| :------: |
+| Food and Drink                     |
+| Seat Comfort                       |
+| In-Flight Entertainment            |
+| Onboard Service                    |
+| Leg Room Service                   |
+| Baggage Handling                   |
+| Check-In Service                   |
+| In-Flight Service                  |
+| Cleanliness                        |
+| ------                             |
+
+
+<br>
+
+```{r ratings_combine, include = FALSE}
+
+# Select columns for Group1
+ratings_group1 <- select(data, Inflight.wifi.service, Departure.Arrival.time.convenient, Ease.of.Online.booking, Gate.location, Online.boarding)  
+
+# Calculate the average for Group1
+data$Pre_Flight_and_WiFi_Ratings <- rowMeans(ratings_group1, na.rm = TRUE)
+
+# Select columns for Group2
+ratings_group2 <- select(data, Food.and.drink, Seat.comfort, Inflight.entertainment, On.board.service, Leg.room.service, Baggage.handling, Checkin.service, Inflight.service, Cleanliness)
+
+# Calculate the average for Group2
+data$In_Flight_and_Baggage_Ratings <- rowMeans(ratings_group2, na.rm = TRUE)
+summary(data)
+
+data_ratings_combined <- data[c("Pre_Flight_and_WiFi_Ratings","In_Flight_and_Baggage_Ratings")]
+
+
+```
+
+```{r ratings_matrix_final, include = FALSE}
+
+cor_matrix_2 <- cor(data_ratings_combined, method = 'spearman')
+
+ratings_correlation_coeff_final <- cor_matrix_2['Pre_Flight_and_WiFi_Ratings','In_Flight_and_Baggage_Ratings']
+
+ratings_correlation_coeff_final
+
+```
+
+The two consolidated ratings variables share a weak positive correlation (correlation coefficient = **`r ratings_correlation_coeff_final`**), indicating that they can be jointly included in our model without violating the collinearity assumption.
+
+
+```{r ratings_matrix_final_visual, fig.width = 15, fig.height = 15, fig.align = 'center', include = FALSE}
+  
+# Create a correlation matrix with the combined ratings fields
+
+
+corrplot.mixed(
+  cor_matrix_2,  
+  lower = "number",
+  upper = "circle",
+  tl.pos = "d",
+  tl.cex = 1,
+  number.cex = 1,
+  cl.cex = 1.5,
+  title="Correlation Matrix for consolidated 5-Point Ratings", 
+  cex.main = 2,
+  
+  mar=c(0,0,5,0) # fixes the position of title 
+  
+  ) 
+
+#title("Correlation Matrix for consolidated 5-Point Ratings", line = 1, cex.main = 2)
+
+
+
+```
+
