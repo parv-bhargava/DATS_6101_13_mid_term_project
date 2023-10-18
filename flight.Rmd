@@ -1,0 +1,123 @@
+---
+title: "Flight"
+author: "Keerthana"
+date: "2023-10-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(readr)
+library(ggplot2)
+library(forcats)
+
+
+data <- read_csv("train.csv")
+head(data)
+
+summary(data)
+
+#nullVal
+sum(is.na(data$`Arrival Delay in Minutes`))
+
+data$`Arrival Delay in Minutes`[is.na(data$`Arrival Delay in Minutes`)] <- median(data$`Arrival Delay in Minutes`, na.rm = TRUE)
+
+#duplicate
+sum(duplicated(data))
+
+
+# Bar
+categorical_vars_ggplot <- c('Gender', '`Customer Type`', '`Type of Travel`', 'Class', 'satisfaction')
+
+for (cat_var in categorical_vars_ggplot) {
+  plot_obj <- ggplot(data, aes_string(x = cat_var, fill = cat_var)) + 
+    geom_bar() +
+    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=-0.5) +
+    labs(title = paste("Distribution of", cat_var), x = cat_var, y = "Count") +
+    scale_fill_brewer(palette="Set3") + 
+    theme_minimal() +  
+    theme(legend.position="none")  
+  
+  print(plot_obj)
+}
+
+```
+
+
+```{r}
+
+numerical_vars_ggplot <- c('Age', '`Flight Distance`', '`Inflight wifi service`', '`Departure/Arrival time convenient`', '`Ease of Online booking`', '`Gate location`', '`Food and drink`', '`Online boarding`', '`Seat comfort`', '`Inflight entertainment`', '`On-board service`', '`Leg room service`', '`Baggage handling`', '`Checkin service`', '`Inflight service`', 'Cleanliness', '`Departure Delay in Minutes`', '`Arrival Delay in Minutes`')
+
+
+```
+
+
+```{r}
+
+library(ggplot2)
+
+
+barplot_vars <- c()  
+histogram_vars <- c() 
+
+for (num_var in numerical_vars_ggplot) {
+  
+  unique_vals <- length(unique(data[[gsub("`", "", num_var)]]))
+  
+  if (unique_vals < 10) {
+    barplot_vars <- c(barplot_vars, num_var)
+  } else {
+    histogram_vars <- c(histogram_vars, num_var)
+  }
+}
+
+barplot_vars
+histogram_vars
+
+
+for (num_var in numerical_vars_ggplot) {
+  
+  unique_vals <- length(unique(data[[gsub("`", "", num_var)]]))
+  
+
+  if (unique_vals < 10) {
+    plot_obj <- ggplot(data, aes_string(x = num_var)) + 
+      geom_bar() +
+    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=-0.5) +
+      labs(title = paste("Distribution of", num_var), x = num_var, y = "Frequency")+
+      scale_fill_brewer(palette="Set3") + 
+    theme_minimal() +  
+    theme(legend.position="none") 
+  } else {
+    plot_obj <- ggplot(data, aes_string(x = num_var)) + 
+      geom_histogram(bins = 40, fill = "skyblue", color = "black", alpha = 0.7) + 
+      labs(title = paste("Distribution of", num_var), x = num_var, y = "Frequency")
+  }
+  
+  print(plot_obj)
+}
+
+```
+
+
+```{r}
+
+# for satisfaction
+for (num_var in histogram_vars) {
+  plot_obj <- ggplot(data, aes_string(x = "satisfaction", y = num_var)) + 
+      geom_boxplot(fill = "skyblue", color = "black", alpha = 0.7) +
+      labs(title = paste("Box plot of", num_var, "by satisfaction"), 
+           x = "Satisfaction", y = num_var) +
+      theme_minimal() +
+      theme(axis.text = element_text(size=10),
+            axis.title = element_text(size=14, face="bold"),
+            plot.title = element_text(hjust = 0.5))
+  
+  print(plot_obj)
+}
+```
+
