@@ -1,0 +1,94 @@
+---
+title: "VIF and Heatmap"
+author: "Parv Bhargava"
+date: "2023-10-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(car)
+library(corrplot)
+```
+## Dataset Overview
+Let's start by loading and summarizing the dataset.
+
+```{r arline_dataset}
+# Load the dataset
+airline_data <- read.csv('archive/train.csv')
+head(airline_data)
+```
+
+```{r dataset_head}
+head(data)
+```
+
+```{r}
+
+str(airline_data)
+```
+```{r summary_stats}
+# Summary of the dataset
+summary(airline_data)
+```
+
+## Multicollinearity Test
+One of the essential steps in data analysis is assessing multicollinearity among independent variables. Multicollinearity occurs when predictor variables are highly correlated with each other, which can impact the reliability of regression models. To address this, we perform a VIF (Variance Inflation Factor) test.
+
+```{r}
+# Load necessary libraries
+library(usdm)
+
+# Data Cleaning: Replace missing values in Arrival.Delay.in.Minutes with mean
+airline_data$Arrival.Delay.in.Minutes[is.na(airline_data$Arrival.Delay.in.Minutes)] <- 15.18
+
+# Select the relevant independent variables for the VIF analysis (e.g., numeric variables)
+independent_vars <- airline_data[, c(
+  "Flight.Distance",
+  "Inflight.wifi.service",
+  "Departure.Arrival.time.convenient",
+  "Ease.of.Online.booking",
+  "Gate.location",
+  "Food.and.drink",
+  "Online.boarding",
+  "Seat.comfort",
+  "Inflight.entertainment",
+  "On.board.service",
+  "Leg.room.service",
+  "Baggage.handling",
+  "Checkin.service",
+  "Inflight.service",
+  "Cleanliness",
+  "Departure.Delay.in.Minutes",
+  "Arrival.Delay.in.Minutes"
+)]
+
+# Calculate VIF using the 'usdm' library
+vif_values <- usdm::vif(independent_vars)
+
+# Create a data frame to display VIF values and variables
+vif_summary <- data.frame(Variable = names(independent_vars), VIF = vif_values)
+
+# Print the VIF summary
+print(vif_summary)
+```
+
+```{r VIF_Correlation_Heatmap, fig.width=10, fig.height=8}
+correlation_matrix <- cor(independent_vars)
+# Create a heatmap of the correlation matrix with larger dimensions
+corrplot(correlation_matrix, method = "color")
+```
+
+## Interpretation and Conclusion
+The VIF test results indicate the presence of multicollinearity among some independent variables. Multicollinearity can affect the reliability of regression models and the interpretation of variable contributions. In our dataset, "Departure.Delay.in.Minutes" and "Arrival.Delay.in.Minutes" have high VIF values, suggesting strong multicollinearity. This implies that these two variables may be highly correlated with other predictors in our dataset.
+
+To address multicollinearity, we may consider:
+
+  1. Removing one of the highly correlated variables.
+  2. Using dimensionality reduction techniques to create uncorrelated predictors.
+  3. Re-evaluating the model's predictors based on the context of the analysis and research goals.
+
+It's essential to address multicollinearity to improve the quality of our predictive models and better understand the impact of various factors on passenger satisfaction.

@@ -72,7 +72,7 @@ Variables are as follows:
 
 ---
 
-##Variable Analysis
+## Variable Analysis
 
 1. **Gender (Categorical Variable):**
    - Descriptive Statistics: Count of each gender category (e.g., Male, Female).
