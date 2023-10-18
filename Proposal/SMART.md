@@ -1,4 +1,6 @@
-# List of SMART Questions for Airline Passenger Satisfaction Dataset in each category for SMART Questions as discussed in class we can select any 4.
+# List of SMART Questions for Airline Passenger Satisfaction Dataset 
+
+We can select any 4 from here
 
 ## Specific
 - What are the specific factors highly correlated with passenger satisfaction in this dataset?
