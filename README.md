@@ -6,3 +6,5 @@ Airline passengers satisfaction is a critical metric that significantly influenc
 
 
 [Dataset](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv)
+
+**Note:** I have changed the structure of project in main file put all the rmd files in r scripts directory and related html in html directory. ALso everything related to proposal should be proposal directory. 
