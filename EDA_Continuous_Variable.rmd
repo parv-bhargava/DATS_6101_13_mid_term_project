@@ -1,0 +1,214 @@
+---
+title: "Data Science Project"
+author: "Namratha"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Install packages
+#install.packages(c('ezids', 'Hmisc', 'ggplot2', 'dplyr', 'pals'))
+install.packages("ezids")
+```
+
+```{r}
+##Library
+# Load the ezids package for functions like xkabledply(), xkablesummary(), uzscale(), etc.
+library(ezids)
+# Load package for "describe" function
+library("Hmisc")
+# Load ggplot2 package
+library(ggplot2)
+# Load dplyr package
+library(dplyr)
+#library(skimr)
+```
+
+#Read csv
+
+```{r}
+data <- read.csv("C:\\Users\\91886\\Downloads\\Prj\\train.csv")
+#print(data)
+```
+
+#Summary
+
+```{r}
+summary(data)
+str(data)
+```
+
+```{r}
+
+
+
+
+# Remove rows with null values
+data <- na.omit(data)
+
+summary(data)
+
+```
+
+
+
+```{r}
+#data$Arrival.Delay.in.Minutes 
+```
+#BOX PLOT 2
+```{r}
+library(ggplot2)
+
+# Assuming 'data' is your dataset
+# If 'data' is named differently, replace it accordingly.
+
+# Create a data frame with the specified variables
+boxplot_data <- data.frame(
+  Variable = rep(c("Age", "Flight.Distance", "Departure.Delay.in.Minutes","Arrival.Delay.in.Minutes"), each = nrow(data)),
+  Value = c(data$Age, data$Flight.Distance, data$Departure.Delay.in.Minutes,data$Arrival.Delay.in.Minutes)
+)
+
+# Create the combined box plot
+ggplot(boxplot_data, aes(x = Variable, y = Value, fill = Variable)) +
+  geom_boxplot() +
+  scale_y_log10() +  # Use a logarithmic scale on the y-axis
+  labs(title = "Box Plot Comparison",
+       x = "Variable",
+       y = "Value (log scale)") +
+  theme_minimal()
+
+```
+```{R}
+library(ggplot2)
+
+# Assuming 'data' is your dataset
+# If 'data' is named differently, replace it accordingly.
+
+# Define the variables
+variables <- c("Age", "Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in.Minutes")
+
+# Create a list to store the plots
+plots <- list()
+
+# Generate box plots for each variable
+for (variable in variables) {
+  # Create a data frame for the specific variable
+  boxplot_data <- data.frame(
+    Variable = rep(variable, nrow(data)),
+    Value = data[[variable]]
+  )
+  
+  # Create the box plot
+  plots[[variable]] <- ggplot(boxplot_data, aes(x = Variable, y = Value, fill = Variable)) +
+    geom_boxplot() +
+     # Use a logarithmic scale on the y-axis
+    labs(title = paste("Box Plot of", variable),
+         x = "Variable",
+         y = "Value") +
+    theme_minimal()
+}
+
+# Print the plots
+for (variable in variables) {
+  print(plots[[variable]])
+}
+
+
+```
+#Violin Plot
+```{r}
+library(ggplot2)
+
+# Assuming 'data' is your dataset
+# If 'data' is named differently, replace it accordingly.
+
+# Create a data frame with the specified variables
+violinplot_data <- data.frame(
+  Variable = rep(c("Age", "Flight.Distance", "Departure.Delay.in.Minutes","Arrival.Delay.in.Minutes"), each = nrow(data)),
+  Value = c(data$Age, data$Flight.Distance, data$Departure.Delay.in.Minutes,data$Arrival.Delay.in.Minutes)
+)
+
+# Create the combined violin plot
+ggplot(violinplot_data, aes(x = Variable, y = Value, fill = Variable)) +
+  geom_violin(trim = TRUE) +
+  scale_y_log10() +  # Use a logarithmic scale on the y-axis
+  labs(title = "Violin Plot Comparison",
+       x = "Variable",
+       y = "Value (log scale)") +
+    theme_minimal()
+
+```
+```{R}
+library(ggplot2)
+
+# Assuming 'data' is your dataset
+# If 'data' is named differently, replace it accordingly.
+
+# Define the variables
+variables <- c("Age", "Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in.Minutes")
+
+# Create a list to store the plots
+plots <- list()
+
+# Generate violin plots for each variable
+for (variable in variables) {
+  # Create a data frame for the specific variable
+  violinplot_data <- data.frame(
+    Variable = rep(variable, nrow(data)),
+    Value = data[[variable]]
+  )
+  
+  # Create the violin plot
+  plots[[variable]] <- ggplot(violinplot_data, aes(x = Variable, y = Value, fill = Variable)) +
+    geom_violin(trim = TRUE) +
+    labs(title = paste("Violin Plot of", variable),
+         x = "Variable",
+         y = "Value") +
+    theme_minimal()
+}
+
+# Print the plots
+for (variable in variables) {
+  print(plots[[variable]])
+}
+
+
+```
+
+
+```{R}
+library(ggplot2)
+
+# Assuming 'data' is your dataset
+# If 'data' is named differently, replace it accordingly.
+
+# Create a data frame for Departure.Delay.in.Minutes
+violinplot_data <- data.frame(
+  Variable = rep("Departure.Delay.in.Minutes", nrow(data)),
+  Value = data$Departure.Delay.in.Minutes
+)
+
+# Create the violin plot with reduced y-axis range
+ggplot(violinplot_data, aes(x = Variable, y = Value, fill = Variable)) +
+  geom_violin(trim = TRUE) +
+  coord_cartesian(ylim = c(0, 100)) +  # Set the y-axis limits (adjust as needed)
+  labs(title = "Violin Plot of Departure Delay in Minutes",
+       x = "Variable",
+       y = "Value") +
+  theme_minimal()
+
+
+```
