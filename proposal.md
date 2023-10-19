@@ -24,6 +24,6 @@ Our research aims to answer the following questions:
 We will use the [Airline Passenger Satisfaction](https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction) dataset for our research. This dataset is sourced from Kaggle and contains information related to airline passenger satisfaction. It comprises 103,904 rows and 25 columns.
 
 ## GitHub Repository
-You can find our research project and related code in our team's GitHub repository. [Link to GitHub Repository]([insert_link_here](https://github.com/parv-bhargava/DATS_6101_13_mid_term_project))
+You can find our research project and related code in our team's GitHub repository. [Link to GitHub Repository](https://github.com/parv-bhargava/DATS_6101_13_mid_term_project)
 
 ---
