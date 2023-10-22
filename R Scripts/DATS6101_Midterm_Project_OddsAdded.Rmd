@@ -40,10 +40,9 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE, warning = FALSE)
 ## Raw Data and Filtering
 
 ```{r import_data, include = FALSE}
-# Get working directory
-getwd()
+# Get working directory, grabbing parent folder path to access the csv
 # Import train.csv data as a data frame
-data_raw <- data.frame(read.csv("train.csv", header = TRUE))
+data_raw <- data.frame(read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\train.csv", header = TRUE))
 # Get initial description of the data
 str(data_raw)
 header <- xkabledplyhead(data_raw, title = "Header rows for airline passenger dataset")
@@ -51,11 +50,15 @@ header
 
 
 ```
+
+<br>
 Responses for the ratings variables are coded as values from 1-5. However, some responses include 0, representing that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out. Fields for index number and survey ID are also removed.
 
 <br>
 
 The filtered dataset looks as follows:
+
+<br>
 
 ```{r filter_ratings, echo = FALSE}
 # Get unnecessary columns
@@ -86,7 +89,100 @@ summary
 ## Exploratory Data Analysis (EDA)
 
 <br>
+<br>
 
+
+### Encoding variables
+
+<br>
+
+A critical step in evaluating categorical variables is to encode them for use in modeling. Encoding was conducted as follows:
+
+```{r encoding}
+# Encode the satisfaction variable as 1/0 to use temporarily for JB analysis section, should be removed since this will be closer to the start in the full script
+
+data$satisfaction <- ifelse(data$satisfaction == "satisfied", 1, 0)
+
+data$Gender <- ifelse(data$Gender == "Male", 1, 0)
+
+data$Customer.Type <- ifelse(data$Customer.Type == "Loyal Customer", 1, 0)
+
+data$Type.of.Travel <- ifelse(data$Type.of.Travel == "Business travel", 1, 0)
+
+data$Class <- ifelse(data$Class %in% c("Eco", "Eco Plus"), 0, 
+                     ifelse(data$Class == "Business", 1, NA))
+
+
+
+# REMOVE IN FINAL
+```
+
+<br>
+<br>
+
+### Ruling out the linear model
+
+<br>
+
+Before engaging in further analysis, we first identified that satisfaction—as a categorical/binary variable—cannot be reliably predicted through a linear model. View the model below and its predicted vs. actual values for a rough demonstration of this roadblock.
+<br>
+
+```{r linear_model, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+
+linear_model <- lm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance, data = data)
+
+summary(linear_model)
+
+plot_data <- data.frame(
+  Observed = data$satisfaction,  # Replace with your actual dependent variable
+  Predicted = predict(linear_model)
+)
+
+# Create the plot
+ggplot(plot_data, aes(x = Predicted, y = Observed)) +
+  geom_point(aes(color = factor(Observed))) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "purple", size = 2) +
+  labs(
+    title = "Predicted vs. Observed Binary Values\n",
+    x = "\nPredicted Values",
+    y = "Observed Values\n"
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    #axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )  +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"))
+
+
+
+```
+
+
+<br>
+We can see that, despite purportedly containing various coefficients of high statistical significance, **the linear model is fundamentally incapable of modeling binary output**. For various x-values, the linear model predicts unattainable values between satisfied or neutral/dissatisfied (encoded as 1 and 0 respectively).
+
+
+<br>
+
+Rather than a linear model, we will evaluate and prepare the data for use in a **logistic regression**, which predicts the log odds of satisfaction. Such models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. 
+
+<br>
+
+Assumptions are altered as follows:
+- **Linearity**: Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds
+- **Independence of Errors**: Remains as an assumption for both linear and logistic models
+- **Homoscedasticity**: Not required under logistic regression
+- **Normally distributed residuals**: Not required under logistic regression
+- **Multicollinearity**: Remains as an assumption for both linear and logistic models
+
+<br>
+<br>
 
 ### EDA: Ratings variables
 
@@ -279,15 +375,12 @@ ratingsgraph_final + ggtitle("Histogram of aggregated ratings variables\n")
 ### EDA: Linearity with log odds
 
 <br>
-```{r encode satisfaction}
-# Encode the satisfaction variable as 1/0 to use temporarily for JB analysis section, should be removed since this will be closer to the start in the full script
 
-data$satisfaction <- ifelse(data$satisfaction == "satisfied", 1, 0)
 
-# REMOVE IN FINAL
-```
 <br>
-```{r discrete, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+```{r discrete, include = FALSE}
+
+# This chunk transforms continuous variables into discrete ones for use in linearity checks
 
 # Calculate the discrete buckets for each variable
 age_breaks <- seq(0, 90, by = 2)
@@ -310,7 +403,7 @@ data$InFlightCategory<-cut(data$In_Flight_and_Baggage_Ratings, breaks = rating_b
 
 <br>
 
-Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds**.\
+Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds**. In a similar manner, ordinal variables are expected to be related in such a manner that each increment has an equivalent effect on the log odds.
 
 Odds represent the number of favorable outcomes divided by the number of unfavorable outcomes. Put differently, if "p" represents the probability of favorable outcomes, Odds = **p/(1-p)**. Log odds take the natural log of the odds, which can be expressed as **ln(p/1-p))**.
 
@@ -336,6 +429,10 @@ log_odds_ArrDelay <- aggregate(satisfaction ~ ArrDelayCategory, data, log_odds_c
 
 log_odds_PreFlight <- aggregate(satisfaction ~ PreFlightCategory, data, log_odds_calc)
 log_odds_InFlight <- aggregate(satisfaction ~ InFlightCategory, data, log_odds_calc)
+
+log_odds_Class <- aggregate(satisfaction ~ Class, data, log_odds_calc)
+
+describe(log_odds_Class)
 
 ```
 <br>
@@ -427,6 +524,8 @@ ggplot(log_odds_ArrDelay, aes(x = ArrDelayCategory, y = satisfaction)) +
 <br>
 Based on the graphs, it appears that only flight distance has a roughly linear relationship with log odds of satisfaction. Age appears to have a parabolic relationship, peaking in the middle; some sort of aggressive transformation method may be required to reach a linear relationship. Meanwhile, log odds for both delay statistics quickly disperse in both directions as they increase (likely in part due to the limited frequency of higher durations), making it difficult to conclude with certainty that a linear relationship exists.
 
+<br>
+
 
 ```{r log_odds_ratings_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
 
@@ -471,5 +570,31 @@ ggplot(log_odds_InFlight, aes(x = InFlightCategory, y = satisfaction)) +
 
 ```
 <br>
+<br>
+<br>
 
 In-flight and baggage ratings have a strikingly linear relationship with log odds; meanwhile, pre-flight and wi-fi ratings appear to have a significantly looser connection with a potential dip in log odds for average ratings. We can conclude with confidence that the in-flight aggregate fulfills the linearity assumption, while the pre-flight ratings are far more obscure in that regard. 
+
+<br>
+<br>
+
+## Logistic model attempt
+
+```{r logistic_model_init, echo = FALSE}
+
+logistic_model_init <- glm(satisfaction ~ Age + In_Flight_and_Baggage_Ratings + Flight.Distance + Gender + Customer.Type + Type.of.Travel + Class, data = data, family = binomial)
+
+summary(logistic_model_init)
+
+
+```
+```{r logistic_model_final, echo = FALSE}
+
+logistic_model_final <- glm(satisfaction ~ Age + In_Flight_and_Baggage_Ratings + Customer.Type + Type.of.Travel + Class, data = data, family = binomial)
+
+summary(logistic_model_final)
+
+car::vif(logistic_model_final)
+
+```
+
