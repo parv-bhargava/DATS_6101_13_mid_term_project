@@ -1,0 +1,468 @@
+---
+title: "Flight"
+author: "Keerthana"
+date: "2023-10-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r fig.width=15, fig.height=15}
+
+library(readr)
+library(ggplot2)
+library(forcats)
+library(corrplot)
+library(gridExtra)
+library(RColorBrewer)
+
+
+data <- read.csv("train.csv")
+head(data)
+
+sum(is.na(data$Arrival.Delay.in.Minutes))
+
+data$Arrival.Delay.in.Minutes[is.na(data$Arrival.Delay.in.Minutes)] <- median(data$Arrival.Delay.in.Minutes, na.rm = TRUE)
+
+#duplicate
+sum(duplicated(data))
+
+
+categorical_vars_ggplot <- c('Gender', 'Customer.Type', 'Type.of.Travel', 'Class', 'satisfaction')
+
+plot_list <- list()
+
+for (cat_var in categorical_vars_ggplot) {
+  plot_obj <- ggplot(data, aes_string(x = cat_var, fill = cat_var)) + 
+    geom_bar() +
+    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=-0.5) +
+    labs(title = paste("Distribution of", cat_var), x = cat_var, y = "Count") +
+    scale_fill_brewer(palette="Set3") + 
+    theme_minimal() +  
+    theme(legend.position="none")
+  
+  plot_list[[cat_var]] <- plot_obj
+}
+
+grid.arrange(grobs = plot_list, ncol = 2)
+
+
+```
+```{r}
+summary(data)
+```
+
+```{r}
+
+numerical_vars_ggplot <- c('Age', 'Flight.Distance', 'Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
+
+
+```
+
+
+```{r}
+
+library(ggplot2)
+
+
+barplot_vars <- c()  
+histogram_vars <- c() 
+
+for (num_var in numerical_vars_ggplot) {
+  
+  unique_vals <- length(unique(data[[gsub("`", "", num_var)]]))
+  
+  if (unique_vals < 10) {
+    barplot_vars <- c(barplot_vars, num_var)
+  } else {
+    histogram_vars <- c(histogram_vars, num_var)
+  }
+}
+
+barplot_vars
+histogram_vars
+
+
+for (num_var in numerical_vars_ggplot) {
+  
+  unique_vals <- length(unique(data[[gsub("`", "", num_var)]]))
+  
+
+  if (unique_vals < 10) {
+    plot_obj <- ggplot(data, aes_string(x = num_var)) + 
+      geom_bar() +
+    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=-0.5) +
+      labs(title = paste("Distribution of", num_var), x = num_var, y = "Frequency")+
+      scale_fill_brewer(palette="Set3") + 
+    theme_minimal() +  
+    theme(legend.position="none") 
+  } else {
+    plot_obj <- ggplot(data, aes_string(x = num_var)) + 
+      geom_histogram(bins = 40, fill = "skyblue", color = "black", alpha = 0.7) + 
+      labs(title = paste("Distribution of", num_var), x = num_var, y = "Frequency")
+  }
+  
+  print(plot_obj)
+}
+
+```
+
+### sample
+
+
+```{r fig.width=10, fig.height=10}
+
+continuous_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
+
+continuous_plots <- list()
+
+for (num_var in continuous_vars) {
+    plot_obj <- ggplot(data, aes_string(x = num_var)) + 
+      geom_histogram(bins = 40, fill = "skyblue", color = "black", alpha = 0.7) + 
+      labs(title = paste("Distribution of", num_var), x = num_var, y = "Frequency") +
+      theme_minimal()
+    
+    continuous_plots <- append(continuous_plots, list(plot_obj))
+}
+
+if (length(continuous_plots) > 0) {
+  grid.arrange(grobs = continuous_plots, ncol = 2)
+}
+
+
+
+```
+
+
+```{r fig.width=50, fig.height=100}
+
+rating_vars <- c('Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness')
+
+rating_plots <- list()
+
+for (rate_var in rating_vars) {
+    plot_obj <- ggplot(data, aes_string(x = rate_var)) + 
+      geom_bar(aes(fill = get(rate_var))) +
+      geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=0, size = 20) +
+      labs(title = paste("Distribution of", rate_var), x = rate_var, y = "Frequency")+
+      scale_fill_brewer(palette="Set3") + 
+      theme_minimal() +  
+      theme(legend.position="none",
+            
+        plot.title = element_text(size = 54, face = "bold"),
+        axis.title.x = element_text(size = 52, face = "bold"),  
+        axis.title.y = element_text(size = 52, face = "bold"),
+        axis.text.x = element_text(size = 50),
+        axis.text.y = element_text(size = 50))
+    
+    rating_plots <- append(rating_plots, list(plot_obj))
+}
+
+if (length(rating_plots) > 0) {
+  grid.arrange(grobs = rating_plots, ncol = 2)
+}
+
+
+
+```
+
+
+
+## Correlation Analysis for numerical variables
+
+
+```{r fig.width=10, fig.height=10}
+
+numerical_vars_correlation <- gsub("`", "", numerical_vars_ggplot)
+
+correlation_matrix <- cor(data[numerical_vars_correlation])
+options(repr.plot.width=100, repr.plot.height=80)
+corrplot(correlation_matrix, method = "color", type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 90, addCoef.col = "black", number.cex = 0.9, 
+         cl.cex = 0.9)
+
+
+```
+
+
+#### Many service ratings (e.g., Online boarding, Seat comfort, Inflight entertainment, etc.) are moderately correlated with each other. This is expected as a passenger's overall experience can influence their ratings across multiple services.
+
+#### Departure Delay in Minutes and Arrival Delay in Minutes are positively correlated, indicating that flights which depart late often arrive late.
+
+
+
+## BoxPlots Related to the Target Variable(Satisfaction)
+
+
+#### we are exploring how different numerical features interact with the target variable (satisfaction). This will help in understanding how different values of a feature relate to customer satisfaction.
+
+```{r fig.width=10, fig.height=10}
+
+library(gridExtra)
+
+histogram_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
+
+boxplot_list <- list()
+
+for (num_var in histogram_vars) {
+  plot_obj <- ggplot(data, aes_string(x = "satisfaction", y = num_var)) + 
+      geom_boxplot(fill = "skyblue", color = "black", alpha = 0.7) +
+      labs(title = paste("Box plot", num_var), 
+           x = "Satisfaction", y = num_var) +
+      theme_minimal() +
+      theme(axis.text = element_text(size=10),
+            axis.title = element_text(size=10, face="bold"),
+            plot.title = element_text(hjust = 0.3))
+  
+  boxplot_list <- append(boxplot_list, list(plot_obj))
+}
+
+grid.arrange(grobs = boxplot_list, ncol = 2)
+
+
+
+```
+
+#### Age: Satisfied customers tend to be older than neutral or dissatisfied customers.
+
+#### Flight Distance: Satisfied customers, on average, seem to travel longer distances.
+
+#### Departure Delay in Minutes: Flights with higher departure delays tend to have more neutral or dissatisfied customers.
+
+#### Arrival Delay in Minutes: Similarly, flights with higher arrival delays tend to have more neutral or dissatisfied customers.
+
+
+
+## Identifying Outliers or Anomalies in the Data
+
+```{r}
+
+selected_data <- c("Age", "Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in .Minutes")
+
+
+outliers_counts_selected <- sapply(colnames(selected_data), function(var) {
+  
+  Q1 <- quantile(selected_data[[var]], 0.25, na.rm = TRUE)
+  Q3 <- quantile(selected_data[[var]], 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  
+  outliers <- which((selected_data[[var]] < lower_bound) | 
+                    (selected_data[[var]] > upper_bound))
+  
+  length(outliers)
+})
+
+outliers_counts_selected
+
+
+
+```
+
+#### Here are the number of potential outliers identified for each continuous numerical variable using the IQR method
+
+
+#### It's evident that the delay-related columns (Departure Delay in Minutes and Arrival Delay in Minutes) have a significant number of potential outliers. This might be due to occasional very long delays that are outliers in a statistical sense, but could still be genuine data points.
+
+## For our dataset:
+
+***
+Age: No outliers, so no action needed.
+
+Flight Distance: Given that it's plausible for some flights to have longer distances, capping might be a better approach than outright removal.
+
+Departure/Arrival Delay in Minutes: Delays can vary significantly, with occasional very long delays. Instead of removing these values, it might be more beneficial to apply a log transformation to reduce the skewness and impact of extreme values.
+
+Note : We'll add 1 before applying the log transformation to handle instances with a delay of 0 minutes.
+
+***
+```{r}
+
+Q1_fd <- quantile(data$Flight.Distance, 0.25)
+Q3_fd <- quantile(data$Flight.Distance, 0.75)
+IQR_fd <- Q3_fd - Q1_fd
+
+lower_cap_fd <- Q1_fd - 1.5 * IQR_fd
+upper_cap_fd <- Q3_fd + 1.5 * IQR_fd
+
+data$Flight.Distance <- pmin(pmax(data$Flight.Distance, lower_cap_fd), upper_cap_fd)
+
+
+data$Departure.Delay.in.Minutes <- log1p(data$Departure.Delay.in.Minutes)
+data$Arrival.Delay.in.Minutes <- log1p(data$Arrival.Delay.in.Minutes)
+
+
+head(data[c("Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in.Minutes")])
+
+
+
+```
+
+
+```{r}
+
+categorical_features <- c('Gender', 'Customer.Type', 'Type.of.Travel', 'Class')
+
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+
+for (feature in categorical_features) {
+  p <- ggplot(data, aes_string(x=feature, fill='satisfaction')) +
+    geom_bar(position="dodge") +
+    geom_text(stat='count', aes(label=..count..), vjust=-0.5, position=position_dodge(width=0.9)) +
+    labs(title = paste("Distribution of", gsub("`", "", feature), "by Satisfaction"), x = gsub("`", "", feature), y = "Count") +
+    scale_fill_brewer(palette="Set3") +
+    theme_minimal() +
+    theme(legend.position="top")
+  print(p)
+}
+
+```
+
+#### Observtions
+
+***
+Gender: Both genders have a fairly similar distribution of satisfaction levels.
+Customer Type: Loyal customers tend to be more satisfied than disloyal ones.
+Type of Travel: Passengers traveling for business purposes are generally more satisfied than those traveling for personal reasons.
+Class: Business class passengers are noticeably more satisfied than those in Eco or Eco Plus.
+
+***
+
+
+## Distribution of numerical features by satisfaction - KDE (Kernel Density Estimation)
+
+```{r}
+
+numerical_features <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
+
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+
+for (feature in numerical_features) {
+  p <- ggplot(data, aes_string(x=feature, fill='satisfaction')) +
+    geom_density(alpha=0.5, position="identity") +
+    labs(title = paste("Distribution of", feature, "by Satisfaction"), x = feature, y = "Density") +
+    scale_fill_manual(values=c("satisfied"="green", "neutral or dissatisfied"="red")) +
+    theme_minimal() +
+    theme(legend.position="top")
+  print(p)
+}
+
+
+```
+
+
+#### Observations
+
+
+***
+
+Age: Younger passengers tend to be more neutral or dissatisfied, while older passengers lean more towards satisfaction.
+
+Flight Distance: Passengers traveling shorter distances seem to be more neutral or dissatisfied compared to those traveling longer distances.
+
+Departure Delay in Minutes: Although the distributions overlap considerably, there's a slightly higher density of neutral or dissatisfied passengers with longer departure delays.
+
+Arrival Delay in Minutes: Similar to departure delays, passengers with longer arrival delays tend to be more neutral or dissatisfied.
+
+
+***
+
+
+
+## Visualize the relationship between Age and Flight Distance colored by satisfaction.
+
+
+```{r}
+
+# just 5000 rows
+data_sample <- data[sample(nrow(data), 5000), ]
+
+# Scatter plot
+ggplot(data_sample, aes(x=Age, y=Flight.Distance, color=satisfaction)) +
+  geom_point(alpha=0.7) +
+  scale_color_manual(values=c("neutral or dissatisfied"="red", "satisfied"="green")) +
+  labs(title="Relationship between Age and Flight Distance by Satisfaction") +
+  theme_minimal()
+```
+
+
+***
+
+There's a spread of satisfied and neutral/dissatisfied customers across various ages and flight distances.
+
+Older passengers who travel longer distances seem to be predominantly satisfied.
+
+Younger passengers, especially those traveling shorter distances, display a mix of satisfaction levels.
+
+***
+
+
+## Chi-Squared Test
+
+#### We will assess the association association between each categorical variable and the satisfaction target variable.
+
+
+Null Hypothesis : There is no association between the categorical variable and the satisfaction of passengers.
+alternative hypothesis : There is a statistically significant association between the categorical variable and the satisfaction of passengers.
+
+```{r}
+
+
+categorical_vars <- c('Gender', 'Customer.Type', 'Type.of.Travel', 'Class')
+
+perform_chi2_test <- function(feature) {
+  contingency_table <- table(data[[feature]], data$satisfaction)
+  chi2_test_result <- chisq.test(contingency_table)
+  return(chi2_test_result$p.value)
+}
+
+chi2_p_values <- sapply(categorical_vars, perform_chi2_test)
+
+names(chi2_p_values) <- categorical_vars
+chi2_p_values
+
+
+
+```
+
+
+***
+
+For all these variables, the p-values are extremely small, indicating that there is a statistically significant association between the categorical variable and the target variable satisfaction.
+
+
+Given the extremely small p-values for all the categorical variables, we can reject the null hypothesis
+ for each of them. This implies that there's a statistically significant association between each of these categorical variables (Gender, Customer Type, Type of Travel, and Class) and passenger satisfaction.
+
+In simpler terms, the likelihood of a passenger being satisfied (or not) is not independent of their gender, customer type, type of travel, or class. Each of these factors plays a role in determining their satisfaction level.
+
+***
+
+## T-test 
+
+Null Hypothesis : There is no difference in the means of "Arrival Delay in Minutes" between the two satisfaction groups (satisfied and neutral or dissatisfied).
+
+alternative hypothesis : There is a significant difference in the means of "Arrival Delay in Minutes" between the two satisfaction groups.
+
+
+#### We will perform a two-sample t-test to determine if the means of "Arrival Delay in Minutes" for the two satisfaction groups are statistically different.
+
+```{r}
+
+group1_arrival_delay <- data$Arrival.Delay.in.Minutes[data$satisfaction == "satisfied"]
+group2_arrival_delay <- data$Arrival.Delay.in.Minutes[data$satisfaction == "neutral or dissatisfied"]
+
+t_test_result_arrival_delay <- t.test(group1_arrival_delay, group2_arrival_delay)
+
+
+t_test_result_arrival_delay
+
+
+
+```
+
+#### Given the very low p-value, we can reject the null hypothesis. This means there is a statistically significant difference in the means of "Arrival Delay in Minutes" between passengers who are satisfied and those who are neutral or dissatisfied. Specifically, passengers who are satisfied seem to experience, on average, a shorter arrival delay compared to those who are neutral or dissatisfied.
