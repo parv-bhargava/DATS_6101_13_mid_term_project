@@ -10,8 +10,8 @@ Airline passengers satisfaction is a critical metric that significantly influenc
 **Note:** I have changed the structure of project in main file put all the rmd files in r scripts directory and related html in html directory. ALso everything related to proposal should be proposal directory. 
 
 
-* Discriptive analysis for continous                                         (Namratha)
-* Multicollienarity between continous rating                                 (Parv) 
-* Continuous variable linearity with log odds testing                        (Jehan)
-* Pinning down rating variable visuals, categorical variable graphs          (Keerthana)
-* Final R script                                                             (Parv)
+# TODO:
+
+* Work on presenataion
+* Can do a mock presentation on tuesday over gmeet or in person
+* Add some extra content in final scriot
