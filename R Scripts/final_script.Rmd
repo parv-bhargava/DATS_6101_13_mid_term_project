@@ -1,64 +1,204 @@
 ---
 title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
-author: "Parv Bhargava"
+author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
 date: "2023-10-20"
 output: html_document
 ---
 
 
 ```{r init, include=FALSE}
+# Load the 'psych' package for various functions related statistics
 library(psych)
+
+# Load the 'readr' package for efficient reading of data files
 library(readr)
+
+# Load the 'forcats' package for handling categorical variables
 library(forcats)
+
+# Load the 'gridExtra' package for arranging multiple plots on a grid
 library(gridExtra)
+
+# Load the 'RColorBrewer' package for color palettes
 library(RColorBrewer)
+
+# Load the 'usdm' package for data mining and analysis
 library(usdm)
-# Load the ezids package for functions like xkabledply(), xkablesummary(), uzscale(), etc.
+
+# Load the 'ezids' package
 library(ezids)
-# Load package for "describe" function
+
+# Load the 'Hmisc' package for various functions, including 'describe'
 library(Hmisc)
-# Load ggplot2 package
+
+# Load the 'ggplot2' package for creating data visualizations using the Grammar of Graphics
 library(ggplot2)
-# Load dplyr package
+
+# Load the 'dplyr' package for data manipulation and transformation
 library(dplyr)
-# Load car package for VIF
+
+# Load the 'car' package for functions related to regression diagnostics, including VIF
 library(car)
-# Load corrplot package for correlation matrix visuals
+
+# Load the 'corrplot' package for visualizing correlation matrices
 library(corrplot)
-# Load kableExtra package for ratings group table
+
+# Load the 'kableExtra' package for advanced table formatting with 'kable'
 library(kableExtra)
+
+# Load the 'knitr' package for dynamic report generation
 library(knitr)
 ```
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, warning = FALSE)
+```{r setup, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, message = F)
+# knitr::opts_chunk$set(include = F)
+# knitr::opts_chunk$set(echo = TRUE)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
 ```
 
-## Introduction
+```{r scrollbar_verticle, include=FALSE}
+options(width = 60)
+local({
+  hook_output <- knitr::knit_hooks$get('output')
+  knitr::knit_hooks$set(output = function(x, options) {
+    if (!is.null(options$max.height)) options$attr.output <- c(
+      options$attr.output,
+      sprintf('style="max-height: %s;"', options$max.height)
+    )
+    hook_output(x, options)
+  })
+})
+```
+
+# Introduction
+
+Airline passenger satisfaction is a crucial aspect of the aviation industry. Understanding the factors that lead to customer satisfaction is essential for airlines to improve their services and compete effectively in the highly competitive market. In this research, we aim to analyze the various factors that affect airline passenger satisfaction using a dataset that contains a wide range of variables related to the passenger's experience.
+
+## Research Proposal
+
+Our research focuses on analyzing factors affecting airline passenger satisfaction. We will utilize a survey dataset that contains various aspects of the airline flight experience to evaluate its suitability for creating a logistic regression model predicting passenger satisfaction. This research can be valuable for airlines looking to enhance their customers' experiences and compete effectively in the industry.
+
+We will leverage a dataset that includes surveyed passenger characteristics, flight details, and satisfaction ratings for select pre-flight and in-flight components. To ensure modeling suitability, we will conduct exploratory data analysis, taking into account variable distributions and types.
+
+### SMART Questions
+Our research aims to answer the following questions:
+
+1. **To what extent do certain surveyed passenger characteristics and flight experience components impact the likelihood that a passenger will be satisfied – rather than neutral or dissatisfied – with their trip?**
+
+2. **How can we model the likelihood of passenger satisfaction using surveyed passenger characteristics and flight experience components in a manner that minimizes predictive bias?**
+
+3. **To what extent can we predict the likelihood that a flight passenger will be satisfied with their experience using multiple different variable levels?**
+
+### Objective
+
+This research offers an opportunity to assess the limitations of linear regression models in predicting passenger satisfaction. By complementing our analysis with exploratory data analysis (EDA), we can illustrate why a linear regression model may not be suitable for this analysis. This will lay the groundwork for our future research on logistic regression.
+
+In summary, our research will provide insights into the intricate relationship between passenger characteristics, flight experience, and satisfaction levels. We will also explore the limitations of linear regression models and prepare the foundation for a more advanced logistic regression approach in future analysis.
+
+### Data Variables
+
+The dataset for our research on airline passenger satisfaction contains various variables, which can be categorized into three types: numeric, categorical, and ordinal. In this section, we'll list and briefly explain each of these variables.
+
+#### Numeric Variables
+
+1. **Age**: This variable represents the actual age of the passengers.
+
+2. **Flight Distance**: Flight distance is the distance covered during the journey, measured in miles.
+
+3. **Departure Delay in Minutes**: This variable indicates the number of minutes by which a flight was delayed during departure.
+
+4. **Arrival Delay in Minutes**: Similarly, this variable represents the number of minutes by which a flight was delayed during arrival.
+
+#### Categorical Variables
+
+1. **Gender**: Gender is a categorical variable with two levels, "Female" and "Male," indicating the gender of the passengers.
+
+2. **Customer Type**: The "Customer Type" variable categorizes passengers as either "Loyal customer" or "Disloyal customer," based on their customer loyalty.
+
+3. **Type of Travel**: This variable categorizes the purpose of the flight, with two levels, "Personal Travel" and "Business Travel."
+
+4. **Class**: "Class" indicates the travel class in the plane and includes levels "Business," "Economy," and "Economy Plus."
+
+### Ordinal Variables
+
+The following variables represent satisfaction levels, which are ordinal in nature, with values ranging from 0 to 5.
+
+1. **Inflight Wifi Service**: Satisfaction level of the inflight wifi service (0: Not Applicable; 1-5).
+
+2. **Departure/Arrival Time Convenient**: Satisfaction level of departure/arrival time convenience.
+
+3. **Ease of Online Booking**: Satisfaction level of online booking.
+
+4. **Gate Location**: Satisfaction level of gate location.
+
+5. **Food and Drink**: Satisfaction level of food and drink.
+
+6. **Online Boarding**: Satisfaction level of online boarding.
+
+7. **Seat Comfort**: Satisfaction level of seat comfort.
+
+8. **Inflight Entertainment**: Satisfaction level of inflight entertainment.
+
+9. **On-board Service**: Satisfaction level of on-board service.
+
+10. **Leg Room Service**: Satisfaction level of leg room service.
+
+11. **Baggage Handling**: Satisfaction level of baggage handling.
+
+12. **Check-in Service**: Satisfaction level of check-in service.
+
+13. **Inflight Service**: Satisfaction level of inflight service.
+
+14. **Cleanliness**: Satisfaction level of cleanliness.
+
+### Target Variable
+
+- **Satisfaction**: The "Satisfaction" variable represents the airline passenger's satisfaction level and includes three categories: "Satisfaction," "Neutral," or "Dissatisfaction." This will be our primary outcome variable for analysis.
+
+In our research, we will explore how these variables interact and contribute to passenger satisfaction levels. We will use statistical methods and modeling techniques to gain insights into the factors that lead to customer satisfaction for an airline.
 
 
-### - Briefly introduce the data and its context.
-
-
-### - Mention the objective of the analysis: To explore the data and demonstrate why linear regression may not be the best model for this specific case.
-
-## Load the Data
-
-Import the data into R by using `read.csv()` function.
+## Loading the Data
+We first imported the data into R by using `read.csv()` function.
 
 ```{r data}
-data <- read_csv("archive/train.csv")
-xkabledplyhead(data)
+data <- read.csv("archive/train.csv")
+table_head <- kableExtra::scroll_box(xkabledplyhead(data, title = "Head for the data",
+  pos = "left",
+  bso = "striped"), width = "100%", height = "100%")
+table_head
 ```
 
-### Check its structure, dimensions.
-```{r 'structure and dimension of the data'}
+
+## Checking data structure and dimensions
+
+#### Data structure
+```{r structure of the data,echo=FALSE}
 str(data)
+```
+
+
+#### Data dimensions
+```{r dimension of the data,echo=FALSE}
 dim(data)
 ```
 
-**Data Preprocessing**
-```{r data preprocessing}
+
+#### An initial description of the data
+
+```{r description,max.height = "500px",echo=FALSE }
+describe(data)
+```
+
+##  Data Pre-processing
+
+#### **Duplicate values**
+```{r data_preprocessing_obs, echo=FALSE}
 # Check for missing values
 missing_data <- data %>%
   summarise_all(~ sum(is.na(.)))
@@ -66,52 +206,139 @@ missing_data <- data %>%
 # Check for duplicated rows
 duplicate_rows <- data %>%
   summarise(n_duplicates = sum(duplicated(.)))
+```
+It has total `r sum(duplicated(data))` duplicate values
 
-# Remove duplicated rows if necessary
-# data <- data[!duplicated(data), ]
-missing_data
-duplicate_rows
+#### **Missing Values**
 
-missing_data <- sum(is.na(data$`Arrival Delay in Minutes`))
-
-data$`Arrival Delay in Minutes`[is.na(data$`Arrival Delay in Minutes`)] <- median(data$`Arrival Delay in Minutes`, na.rm = TRUE)
-
-#duplicate
-sum(duplicated(data))
-missing_data
+The following table shows the NA values in our dataset:
+```{r result_missing,echo=FALSE}
+table_1 <- kableExtra::scroll_box(xkabledply(missing_data , title = "Missing Values — Initial",
+  pos = "left",
+  bso = "striped"), width = "100%", height = "100%")
+table_1
 ```
 
-```{r histograms_categorical, fig.width=15, fig.height=15}
+We elected to replace these 310 NA values in arrival delays with the median delay; this method was used over other potential replacement options, such as the average, due to the skewed distribution.
 
-categorical_vars_ggplot <- c('Gender', '`Customer Type`', '`Type of Travel`', 'Class', 'satisfaction')
+
+```{r data preprocessing, echo=FALSE}
+# Get unnecessary columns
+drop <- c("X","id")
+# Drop column names specified in vector
+data <- data[,!(names(data) %in% drop)]
+
+#Select ratings columns
+selected_columns <- 7:20
+
+# Check if any ratings include zeros (representing N/A)
+has_zeros <- apply(data[selected_columns], 1, function(row) any(row == 0))
+
+# Remove rows with zeros in the selected columns
+data <- data[!has_zeros, ]
+
+
+#Remove NA values which we acquired previously
+data$Arrival.Delay.in.Minutes[is.na(data$Arrival.Delay.in.Minutes)] <- median(data$Arrival.Delay.in.Minutes, na.rm = TRUE)
+missing_data <- data %>%
+  summarise_all(~ sum(is.na(.)))
+```
+
+
+The table below demonstrates that all missing values have been replaced; the "X" and "id" fields for index number and survey ID are also removed from the data frame due to their limited relevance for modeling.
+
+
+Responses for the ratings variables are coded as values from 1-5. However, some responses include 0, representing that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out.
+
+
+
+```{r result_dpp,echo=FALSE}
+table_2 <- kableExtra::scroll_box(xkabledply(missing_data , title = "Missing Values — Final",
+  pos = "left",
+  bso = "striped"), width = "100%", height = "100%")
+table_2
+```
+
+
+
+## Summary Statistics
+
+```{r summary_stats, include=FALSE}
+# Summary statistics for numeric fields
+numeric_fields <- c("Age", "Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in.Minutes")
+summary_stats_numeric <- summary(data[numeric_fields])
+
+# Summary statistics for categorical fields
+categorical_fields <- c("Gender", "Customer.Type", "Type.of.Travel", "Class",
+                        "Inflight.wifi.service", "Departure.Arrival.time.convenient", "Ease.of.Online.booking",
+                        "Gate.location", "Food.and.drink", "Online.boarding", "Seat.comfort",
+                        "Inflight.entertainment", "On.board.service", "Leg.room.service", "Baggage.handling",
+                        "Checkin.service", "Inflight.service", "Cleanliness", "satisfaction")
+
+summary_stats_categorical <- data %>%
+  summarise(across(all_of(categorical_fields), 
+                   list(n = ~ length(.), n_distinct = ~ length(unique(.)), top_freq = ~ names(sort(table(.), decreasing = TRUE)[1]))
+  ))
+```
+The following output features summary statistics for the continuous variables:
+```{r ,max.height = "500px"}
+summary_stats_numeric
+```
+
+The following output features summary statistics for the categorical/ordinal variables:
+```{r ,max.height = "500px"}
+summary_stats_categorical
+```
+# Examining variable distributions
+
+
+
+## Frequency distributions for categorical variables
+
+
+```{r histograms_categorical, fig.width=15, fig.height=15, echo=FALSE}
+
+categorical_vars_ggplot <- c('Gender', 'Customer.Type', 'Type.of.Travel', 'Class', 'satisfaction')
 
 plot_list <- list()
 
 for (cat_var in categorical_vars_ggplot) {
   plot_obj <- ggplot(data, aes_string(x = cat_var, fill = cat_var)) + 
     geom_bar() +
-    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=-0.5) +
-    labs(title = paste("Distribution of", cat_var), x = cat_var, y = "Count") +
-    scale_fill_brewer(palette="Set3") + 
-    theme_minimal() +  
-    theme(legend.position="none")
+    geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=1.2, size = 6) +
+    labs(title = paste("\n Distribution of", cat_var,"\n"), x = cat_var, y = "Count") +
+    scale_fill_brewer(palette="Set3")  +  
+    theme_minimal() +  # Apply a minimal theme
+    theme(
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 20),
+  ) +
+    theme(legend.position="none") +
+    theme(panel.margin = margin(0, 0, 20, 0))
+  
   
   plot_list[[cat_var]] <- plot_obj
 }
 
 grid.arrange(grobs = plot_list, ncol = 2)
-
-
 ```
 
-```{r variables}
 
-numerical_vars_ggplot <- c('Age', '`Flight Distance`', '`Inflight wifi service`', '`Departure/Arrival time convenient`', '`Ease of Online booking`', '`Gate location`', '`Food and drink`', '`Online boarding`', '`Seat comfort`', '`Inflight entertainment`', '`On-board service`', '`Leg room service`', '`Baggage handling`', '`Checkin service`', '`Inflight service`', 'Cleanliness', '`Departure Delay in Minutes`', '`Arrival Delay in Minutes`')
+```{r variables, include=FALSE}
+numerical_vars_ggplot <- c('Age', 'Flight.Distance', 'Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 
-continuous_vars <- c('Age', '`Flight Distance`', '`Departure Delay in Minutes`', '`Arrival Delay in Minutes`')
+
+continuous_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 ```
 
-```{r continous_variables, fig.width=10, fig.height=10}
+## Frequency distributions for continuous variables
+
+
+```{r continous_variables, fig.width=10, fig.height=10, echo=FALSE}
 
 continuous_plots <- list()
 
@@ -129,17 +356,20 @@ if (length(continuous_plots) > 0) {
 }
 
 ```
-```{r rating_plots, fig.width=50, fig.height=100}
 
-rating_vars <- c('`Inflight wifi service`', '`Departure/Arrival time convenient`', '`Ease of Online booking`', '`Gate location`', '`Food and drink`', '`Online boarding`', '`Seat comfort`', '`Inflight entertainment`', '`On-board service`', '`Leg room service`', '`Baggage handling`', '`Checkin service`', '`Inflight service`', 'Cleanliness')
+## Frequency distributions for ordinal variables (Ratings)
+
+
+```{r rating_plots, fig.width=50, fig.height=100, echo=FALSE}
+rating_vars <- c('Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness')
 
 rating_plots <- list()
 
 for (rate_var in rating_vars) {
     plot_obj <- ggplot(data, aes_string(x = rate_var)) + 
-      geom_bar(aes(fill = get(rate_var))) +
-      geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=0, size = 20) +
-      labs(title = paste("Distribution of", rate_var), x = rate_var, y = "Frequency")+
+      geom_bar(fill = "lightblue" , position = "dodge") +
+      geom_text(stat='count', aes_string(label='..count..', y='..count..'), vjust=1.2, size = 20) +
+      labs(title = paste("\nDistribution of", rate_var,"\n"), x = rate_var, y = "Frequency")+
       scale_fill_brewer(palette="Set3") + 
       theme_minimal() +  
       theme(legend.position="none",
@@ -154,25 +384,22 @@ for (rate_var in rating_vars) {
 }
 
 if (length(rating_plots) > 0) {
-  grid.arrange(grobs = rating_plots, ncol = 2)
+  grid.arrange(grobs = rating_plots, ncol = 2 ,)
 }
 ```
 
-## BoxPlots Related to the Target Variable(Satisfaction)
+## Box-Plots Related to the Target Variable (Satisfaction)
 
-#### we are exploring how different numerical features interact with the target variable (satisfaction). This will help in understanding how different values of a feature relate to customer satisfaction.
+The box-plots below are utilized to explore how different numerical features interact with the target variable (satisfaction).
 
-```{r box_plot, fig.width=10, fig.height=10}
-
-library(gridExtra)
-
-histogram_vars <- c('Age', '`Flight Distance`', '`Departure Delay in Minutes`', '`Arrival Delay in Minutes`')
+```{r box_plot, fig.width=10, fig.height=10, echo=FALSE}
+histogram_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 
 boxplot_list <- list()
 
 for (num_var in histogram_vars) {
   plot_obj <- ggplot(data, aes_string(x = "satisfaction", y = num_var)) + 
-      geom_boxplot(fill = "skyblue", color = "black", alpha = 0.7) +
+      geom_boxplot(fill = "turquoise", color = "black", alpha = 0.7) +
       labs(title = paste("Box plot", num_var), 
            x = "Satisfaction", y = num_var) +
       theme_minimal() +
@@ -186,25 +413,32 @@ for (num_var in histogram_vars) {
 grid.arrange(grobs = boxplot_list, ncol = 2)
 ```
 
-#### Age: Satisfied customers tend to be older than neutral or dissatisfied customers.
+#### Observations
 
-#### Flight Distance: Satisfied customers, on average, seem to travel longer distances.
+***
 
-#### Departure Delay in Minutes: Flights with higher departure delays tend to have more neutral or dissatisfied customers.
+*Age:* Satisfied customers tend to be older than neutral or dissatisfied customers.
 
-#### Arrival Delay in Minutes: Similarly, flights with higher arrival delays tend to have more neutral or dissatisfied customers.
+*Flight Distance:* Satisfied customers, on average, seem to travel longer distances.
 
-```{r target_variable_histograms}
+*Departure Delay in Minutes:* Flights with higher departure delays tend to have slightly more neutral or dissatisfied customers.
 
-categorical_features <- c('Gender', '`Customer Type`', '`Type of Travel`', 'Class')
+*Arrival Delay in Minutes:* Similarly, flights with higher arrival delays tend to have slightly more neutral or dissatisfied customers.
+
+***
+
+
+```{r target_variable_histograms, echo=FALSE}
+
+categorical_features <- c('Gender', 'Customer.Type', 'Type.of.Travel', 'Class')
 
 par(mfrow=c(2,2), mar=c(4,4,2,2))
 
 for (feature in categorical_features) {
   p <- ggplot(data, aes_string(x=feature, fill='satisfaction')) +
     geom_bar(position="dodge") +
-    geom_text(stat='count', aes(label=..count..), vjust=-0.5, position=position_dodge(width=0.9)) +
-    labs(title = paste("Distribution of", gsub("`", "", feature), "by Satisfaction"), x = gsub("`", "", feature), y = "Count") +
+    geom_text(stat='count', aes(label=..count..), vjust= 1.2, position=position_dodge(width=0.9)) +
+    labs(title = paste("\nDistribution of", gsub("`", "", feature), "by Satisfaction"), x = gsub("`", "", feature), y = "Count") +
     scale_fill_brewer(palette="Set3") +
     theme_minimal() +
     theme(legend.position="top")
@@ -213,21 +447,26 @@ for (feature in categorical_features) {
 
 ```
 
-#### Observtions
+#### Observations
 
 ***
-Gender: Both genders have a fairly similar distribution of satisfaction levels.
-Customer Type: Loyal customers tend to be more satisfied than disloyal ones.
-Type of Travel: Passengers traveling for business purposes are generally more satisfied than those traveling for personal reasons.
-Class: Business class passengers are noticeably more satisfied than those in Eco or Eco Plus.
+
+*Gender:* Both genders have a fairly similar distribution of satisfaction levels.
+
+*Customer Type:* Loyal customers tend to be more satisfied than disloyal ones.
+
+*Type of Travel:* Passengers traveling for business purposes are generally more satisfied than those traveling for personal reasons.
+
+*Class:* Business class passengers are noticeably more satisfied than those in Eco or Eco Plus.
 
 ***
 
 ## Distribution of numerical features by satisfaction - KDE (Kernel Density Estimation)
 
-```{r}
+```{r numeric_dist, echo=FALSE}
 
-numerical_features <- c('Age', '`Flight Distance`', '`Departure Delay in Minutes`', '`Arrival Delay in Minutes`')
+numerical_features <- c('Age', 'Flight.Distance',  'Departure.Delay.in.Minutes','Arrival.Delay.in.Minutes')
+
 
 par(mfrow=c(2,2), mar=c(4,4,2,2))
 
@@ -247,289 +486,66 @@ for (feature in numerical_features) {
 
 #### Observations
 
-
 ***
 
-Age: Younger passengers tend to be more neutral or dissatisfied, while older passengers lean more towards satisfaction.
+*Age:* Middle-aged passengers tend to be more satisfied than younger and older age groups.
 
-Flight Distance: Passengers traveling shorter distances seem to be more neutral or dissatisfied compared to those traveling longer distances.
+*Flight Distance:* Passengers traveling shorter distances seem to be more neutral or dissatisfied compared to those traveling longer distances.
 
-Departure Delay in Minutes: Although the distributions overlap considerably, there's a slightly higher density of neutral or dissatisfied passengers with longer departure delays.
-
-Arrival Delay in Minutes: Similar to departure delays, passengers with longer arrival delays tend to be more neutral or dissatisfied.
+*Arrival/Departure Delays:* It is difficult to discern any meaningful differences between passengers that were satisfied or neutral/dissatisfied based on arrival or departure delay durations using this method. To expand upon these visuals—potentially revealing more significant observations—we utilized a scatter plot.
 
 
 ***
 
-## Visualize the relationship between Age and Flight Distance colored by satisfaction.
+## Visualizing the relationship between Arrival and Departure delays colored by satisfaction.
 
 
-```{r scatter_plots}
+```{r scatter_plots, echo=FALSE}
 
 # just 5000 rows
 data_sample <- data[sample(nrow(data), 5000), ]
 
 # Scatter plot
-ggplot(data_sample, aes(x=Age, y=`Flight Distance`, color=satisfaction)) +
+ggplot(data_sample, aes(x=Departure.Delay.in.Minutes, y=Arrival.Delay.in.Minutes, color=satisfaction)) +
   geom_point(alpha=0.7) +
   scale_color_manual(values=c("neutral or dissatisfied"="red", "satisfied"="green")) +
-  labs(title="Relationship between Age and Flight Distance by Satisfaction") +
+  labs(title="\nRelationship between Age and Flight Distance by Satisfaction\n") +
   theme_minimal()
-```
-
-
-***
-
-There's a spread of satisfied and neutral/dissatisfied customers across various ages and flight distances.
-
-Older passengers who travel longer distances seem to be predominantly satisfied.
-
-Younger passengers, especially those traveling shorter distances, display a mix of satisfaction levels.
-
-***
-
-
-
-```{r}
-
-
-categorical_vars <- c('Gender', 'Customer Type', 'Type of Travel', 'Class')
-
-perform_chi2_test <- function(feature) {
-  contingency_table <- table(data[[feature]], data$satisfaction)
-  chi2_test_result <- chisq.test(contingency_table)
-  return(chi2_test_result$p.value)
-}
-
-chi2_p_values <- sapply(categorical_vars, perform_chi2_test)
-
-names(chi2_p_values) <- categorical_vars
-chi2_p_values
-
-
 
 ```
 
-
-***
-
-For all these variables, the p-values are extremely small, indicating that there is a statistically significant association between the categorical variable and the target variable satisfaction.
+This graph also indicates that arrival and departure delays follow a roughly similar linear trajectory, potentially indicating high correlation between these fields.
 
 
-Given the extremely small p-values for all the categorical variables, we can reject the null hypothesis
- for each of them. This implies that there's a statistically significant association between each of these categorical variables (Gender, Customer Type, Type of Travel, and Class) and passenger satisfaction.
+# Multicollinearity Testing
 
-In simpler terms, the likelihood of a passenger being satisfied (or not) is not independent of their gender, customer type, type of travel, or class. Each of these factors plays a role in determining their satisfaction level.
-
-***
-
-## T-test 
-
-Null Hypothesis : There is no difference in the means of "Arrival Delay in Minutes" between the two satisfaction groups (satisfied and neutral or dissatisfied).
-
-alternative hypothesis : There is a significant difference in the means of "Arrival Delay in Minutes" between the two satisfaction groups.
+One of the essential steps in data analysis is assessing multicollinearity among independent variables. Multicollinearity occurs when predictor variables are highly correlated with each other, which can impact the reliability of regression models.
 
 
-#### We will perform a two-sample t-test to determine if the means of "Arrival Delay in Minutes" for the two satisfaction groups are statistically different.
+## Correlation Matrices
 
-```{r}
+To begin examining fields with respect to multicollinearity, we used two correlation matrices:
 
-group1_arrival_delay <- data$`Arrival Delay in Minutes`[data$satisfaction == "satisfied"]
-group2_arrival_delay <- data$`Arrival Delay in Minutes`[data$satisfaction == "neutral or dissatisfied"]
+1) Continuous variables
 
-t_test_result_arrival_delay <- t.test(group1_arrival_delay, group2_arrival_delay)
+2) Ratings variables
 
+### Continuous Variable Correlations
 
-t_test_result_arrival_delay
-
-
-
-```
-
-#### Given the very low p-value, we can reject the null hypothesis. This means there is a statistically significant difference in the means of "Arrival Delay in Minutes" between passengers who are satisfied and those who are neutral or dissatisfied. Specifically, passengers who are satisfied seem to experience, on average, a shorter arrival delay compared to those who are neutral or dissatisfied.
-
-```{r data2load, echo = TRUE}
-# Import train.csv data as a data frame
-data_raw <- data.frame(read.csv("archive/train.csv", header = TRUE))
-```
-
-```{r filter_ratings, echo = FALSE}
-# Get unnecessary columns
-drop <- c("X","id")
-# Drop column names specified in vector
-data <- data_raw[,!(names(data_raw) %in% drop)]
-
-#Select ratings columns
-selected_columns <- 7:20
-
-# Check if any ratings include zeros (representing N/A)
-has_zeros <- apply(data[selected_columns], 1, function(row) any(row == 0))
-
-# Remove rows with zeros in the selected columns
-data <- data[!has_zeros, ]
-
-# Get header for filtered data
-header <- xkabledplyhead(data, title = "Header rows for airline passenger data")
-header
-summary <- xkablesummary(data, title = "Summary of airline passenger data")
-summary
-```
-
-***Hypothesis Testing***
-1. **Hypothesis**: The satisfaction level is independent of the gender of the passengers.
-   - Null Hypothesis (H0): Satisfaction and gender are independent.
-   - Alternate Hypothesis (H1): Satisfaction and gender are dependent.
-   
-   
-```{r gender_hpo}
-   contingency_table <- table(data$Gender, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-2. **Hypothesis**: The type of travel is associated with passenger satisfaction.
-   - Null Hypothesis (H0): The type of travel and satisfaction are independent.
-   - Alternate Hypothesis (H1): The type of travel and satisfaction are dependent.
-   
-```{r tot_hpo}
-   contingency_table <- table(data$Type.of.Travel, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-3. **Hypothesis**: Customer type affects satisfaction levels.
-   - Null Hypothesis (H0): Customer type and satisfaction are independent.
-   - Alternate Hypothesis (H1): Customer type and satisfaction are dependent.
-   
-```{r ct_hpo}
-   contingency_table <- table(data$Customer.Type, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-4. **Hypothesis**: There is a relationship between class and passenger satisfaction.
-   - Null Hypothesis (H0): Class and satisfaction are independent.
-   - Alternate Hypothesis (H1): Class and satisfaction are dependent.
-   
-```{r class}
-   contingency_table <- table(data$Class, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-5. **Hypothesis**: Inflight WiFi service has an impact on passenger satisfaction.
-   - Null Hypothesis (H0): Inflight WiFi service and satisfaction are independent.
-   - Alternate Hypothesis (H1): Inflight WiFi service and satisfaction are dependent.
-   
-```{r wifi_hyp0}
-   contingency_table <- table(data$Inflight.wifi.service, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-6. **Hypothesis**: Gender and the convenience of departure/arrival times are independent.
-   - Null Hypothesis (H0): Gender and departure/arrival time convenience are independent.
-   - Alternate Hypothesis (H1): Gender and departure/arrival time convenience are dependent.
-   
-```{r dat_hyp0}
-   contingency_table <- table(data$Gender, data$Departure.Arrival.time.convenient)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-7. **Hypothesis**: Ease of online booking and satisfaction are related.
-   - Null Hypothesis (H0): Ease of online booking and satisfaction are independent.
-   - Alternate Hypothesis (H1): Ease of online booking and satisfaction are dependent.
-   
-```{r olbokking_hyp0}
-   contingency_table <- table(data$Ease.of.Online.booking, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-8. **Hypothesis**: The location of the gate affects passenger satisfaction.
-   - Null Hypothesis (H0): Gate location and satisfaction are independent.
-   - Alternate Hypothesis (H1): Gate location and satisfaction are dependent.
-   
-```{r gate_hypo}
-   contingency_table <- table(data$Gate.location, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-9. **Hypothesis**: Food and drink service quality impacts passenger satisfaction.
-   - Null Hypothesis (H0): Food and drink service and satisfaction are independent.
-   - Alternate Hypothesis (H1): Food and drink service and satisfaction are dependent.
-   
-```{r serv_hyp0}
-   contingency_table <- table(data$Food.and.drink, data$satisfaction)
-   chi_sq_test <- chisq.test(contingency_table)
-   chi_sq_test
-```
-
-10. **Hypothesis**: Online boarding experience influences passenger satisfaction.
-    - Null Hypothesis (H0): Online boarding and satisfaction are independent.
-    - Alternate Hypothesis (H1): Online boarding and satisfaction are dependent.
-    
-```{r onlinebord_hypo}
-    contingency_table <- table(data$Online.boarding, data$satisfaction)
-    chi_sq_test <- chisq.test(contingency_table)
-    chi_sq_test
-```
-
-### Hypothesis Tests for Numeric Variables:
-
-1. **Hypothesis**: The mean age of satisfied passengers is equal to the mean age of dissatisfied passengers.
-   - Null Hypothesis (H0): μ_age_satisfied = μ_age_dissatisfied
-   - Alternate Hypothesis (H1): μ_age_satisfied ≠ μ_age_dissatisfied
-
-```{r age_rel}
-   t_test <- t.test(data$Age ~ data$satisfaction)
-   t_test
-```
-
-2. **Hypothesis**: The mean flight distance for business class passengers is different from that of economy class passengers.
-   - Null Hypothesis (H0): μ_distance_business = μ_distance_economy
-   - Alternate Hypothesis (H1): μ_distance_business ≠ μ_distance_economy
-
-```{r distance_hypo_anova}
-# Perform one-way ANOVA to compare means across different classes
-result <- aov(Flight.Distance ~ Class, data = data)
-# Check the ANOVA table
-summary(result)
-```
-
-3. **Hypothesis**: Departure delay minutes for satisfied passengers are less than departure delay minutes for dissatisfied passengers.
-   - Null Hypothesis (H0): μ_departure_delay_satisfied ≥ μ_departure_delay_dissatisfied
-   - Alternate Hypothesis (H1): μ_departure_delay_satisfied < μ_departure_delay_dissatisfied
-
-```{r ddl_hypo}
-   t_test <- t.test(data$Departure.Delay.in.Minutes ~ data$satisfaction, alternative = "less")
-   t_test
-```
-
-
-***Correlation Analysis***
-Correlation Matrix
-
-Let's take a look at the correlation matrix of the data. This will be done in 2 parts:
-
-1) Numerical variables
-
-2) Categorical variables
-
-Numerical variable Correlation Plot
-
-```{r}
+```{r Numerical_Corr_Analysis, echo=FALSE}
 data_cor <- cor(subset(data,select = c(Age, Flight.Distance,Departure.Delay.in.Minutes,Arrival.Delay.in.Minutes)))
 summary(data_cor)
 options(repr.plot.width = 14, repr.plot.height = 8)
-corrplot(data_cor, na.label = " ", method="color", tl.col = "black", tl.cex = 1)
+corrplot(data_cor, na.label = " ", method="circle", type = "upper",tl.col = "black", tl.cex = 1)
 ```
+As observed earlier, arrival and departure delays appear to be highly correlated; certain steps, such as removing one of the two or calculating an average delay variable, would likely be necessary for use in a predictive model.
+
+### Ratings Variable Correlations
+
+Outside of continuous variables, many of the ratings appear to share similar frequency distributions based on the graphs displayed earlier, sparking significant multicollinearity concerns. Our next step to evaluate these potential relationships was to create another correlation matrix.
 
 
-
-```{r fig.width=10, fig.height=10}
+```{r fig.width=10, fig.height=10, echo=FALSE}
 
 categorical_fields <- c("Inflight.wifi.service", "Departure.Arrival.time.convenient", "Ease.of.Online.booking",
   "Gate.location", "Food.and.drink", "Online.boarding", "Seat.comfort",
@@ -543,167 +559,27 @@ corrplot(correlation_matrix, method = "circle", type = "upper", order = "hclust"
          cl.cex = 0.9)
 ```
 
-Responses for the ratings variables are coded as values from 1-5. However, some responses include 0, representing that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out. Fields for index number and survey ID are also removed.
-
-The data includes a large number of different ratings variables. Most variables have a mean response value centered around 3 points, but the distribution varies for each field.
-
-## Multicollinearity Test
-One of the essential steps in data analysis is assessing multicollinearity among independent variables. Multicollinearity occurs when predictor variables are highly correlated with each other, which can impact the reliability of regression models. To address this, we perform a VIF (Variance Inflation Factor) test.
-
-```{r VIF}
-
-# Select the relevant independent variables for the VIF analysis (e.g., numeric variables)
-independent_vars <- data[, c(
-  "Flight.Distance",
-  "Inflight.wifi.service",
-  "Departure.Arrival.time.convenient",
-  "Ease.of.Online.booking",
-  "Gate.location",
-  "Food.and.drink",
-  "Online.boarding",
-  "Seat.comfort",
-  "Inflight.entertainment",
-  "On.board.service",
-  "Leg.room.service",
-  "Baggage.handling",
-  "Checkin.service",
-  "Inflight.service",
-  "Cleanliness",
-  "Departure.Delay.in.Minutes",
-  "Arrival.Delay.in.Minutes"
-)]
-
-# Calculate VIF using the 'usdm' library
-vif_values <- usdm::vif(independent_vars)
-
-# Create a data frame to display VIF values and variables
-vif_summary <- data.frame(Variable = names(independent_vars), VIF = vif_values)
-
-# Print the VIF summary
-print(vif_summary)
-```
-
-```{r VIF_Correlation_Heatmap, fig.width=10, fig.height=8}
-correlation_matrix <- cor(independent_vars)
-# Create a heatmap of the correlation matrix with larger dimensions
-corrplot(correlation_matrix, method = "color")
-```
-
-## Interpretation and Conclusion
-The VIF test results indicate the presence of multicollinearity among some independent variables. Multicollinearity can affect the reliability of regression models and the interpretation of variable contributions. In our dataset, "Departure.Delay.in.Minutes" and "Arrival.Delay.in.Minutes" have high VIF values, suggesting strong multicollinearity. This implies that these two variables may be highly correlated with other predictors in our dataset.
-
-To address multicollinearity, we may consider:
-
-  1. Removing one of the highly correlated variables.
-  2. Using dimensionality reduction techniques to create uncorrelated predictors.
-  3. Re-evaluating the model's predictors based on the context of the analysis and research goals.
-
-It's essential to address multicollinearity to improve the quality of our predictive models and better understand the impact of various factors on passenger satisfaction.
-
-```{r ratings_histogram, fig.width = 15, fig.height = 10, echo = FALSE}
-
-# Define ratings subset of main data frame
-data_ratings <- data[7:20]
-
-describe(data_ratings)
-
-# Reshape the data into a long format
-data_long <- tidyr::gather(data_ratings, variable, value)
-
-colors <- c(
-  "red", "blue", "green", "purple", "orange",
-  "pink", "gray", "yellow", "cyan", "magenta",
-  "brown", "violet", "turquoise", "pink"
-)
-
-commas <- function(x) {
-  format(x, big.mark = ",")
-}
-
-# Create a clustered histogram with color-separated columns
-ggplot(data_long, aes(x = value, fill = variable)) +
-  geom_histogram(binwidth = 0.5, position = position_dodge(0.7), alpha = 0.7) +  # Create the histogram
-  labs(x = "\nValue", y = "Frequency\n") +  # Add axis labels
-  scale_fill_manual(values = colors) +  # Set custom colors
-  theme_minimal() +  # Apply a minimal theme
-  theme(
-    axis.text = element_text(size = 20),     # Adjust the size of text elements
-    axis.title = element_text(size = 20, face = "bold"),
-    legend.title = element_text(size = 20, face = "bold"), 
-    legend.text = element_text(size = 20),    
-    legend.key.size = unit(2, "lines")
-  ) +
-  scale_y_continuous(labels = commas) + 
-  labs(fill = "Ratings Variables")
-```
-<br>
-
-At first glance, many of the ratings included in the histogram appear to share similar frequency distributions, sparking multicollinearity concerns. Our next step to evaluate these potential relationships was to create a correlation matrix.
-
-<br>
-
-```{r ratings_matrix_initial, fig.width = 15, fig.height = 15, echo = FALSE}
-  
-# Create a correlation matrix
-cor_matrix_1 <- cor(data_ratings, method = 'spearman')
-
-corrplot.mixed(
-  cor_matrix_1,  
-  lower = "number",
-  upper = "circle",
-  tl.pos = "lt",
-  tl.cex = 1,
-  number.cex = 1,
-  cl.cex = 1.5,
-  title="Correlation Matrix for all 5-Point Ratings", 
-  cex.main = 2,
-  
-  mar=c(0,0,5,0) # fixes the position of title 
-  
-  ) 
-
-
-```
-
-<br>
 
 We can see from the matrix that certain ratings variables have strong positive correlations with each other. If these are included in the model without adjustments, our model may suffer a loss in reliability.
 
-<br>
 
 In order to avoid this issue, we elected to combine ratings variables into two groups—based on the degree of correlation—and utilize average ratings from these two groups as model inputs.
 
-<br>
 
-| **Ratings Group 1: Pre-Flight & Wi-Fi** |
-| :------: |
-| In-Flight Wifi Service              |
-| Departure / Arrival Time            |
-| Ease of Online Booking              |
-| Gate Location                       |
-| Online Boarding                     |
-| ------                              |  
-
-<br>
-
-
-| **Ratings Group 2: In-Flight & Baggage** |
-| :------: |
-| Food and Drink                     |
-| Seat Comfort                       |
-| In-Flight Entertainment            |
-| Onboard Service                    |
-| Leg Room Service                   |
-| Baggage Handling                   |
-| Check-In Service                   |
-| In-Flight Service                  |
-| Cleanliness                        |
-| ------                             |
+| **Ratings Group 1: Pre-Flight & Wi-Fi** | **Ratings Group 2: In-Flight & Baggage** |
+|:---------------------------------------|:---------------------------------------|
+| In-Flight Wifi Service                 | Food and Drink                        |
+| Departure / Arrival Time               | Seat Comfort                          |
+| Ease of Online Booking                 | In-Flight Entertainment                |
+| Gate Location                          | Onboard Service                       |
+| Online Boarding                        | Leg Room Service                      |
+|                                       | Baggage Handling                      |
+|                                       | Check-In Service                      |
+|                                       | In-Flight Service                     |
+|                                       | Cleanliness                           |
 
 
-<br>
-
-```{r ratings_combine, include = FALSE}
+```{r ratings_combine, echo=FALSE}
 
 # Select columns for Group1
 ratings_group1 <- select(data, Inflight.wifi.service, Departure.Arrival.time.convenient, Ease.of.Online.booking, Gate.location, Online.boarding)  
@@ -716,14 +592,15 @@ ratings_group2 <- select(data, Food.and.drink, Seat.comfort, Inflight.entertainm
 
 # Calculate the average for Group2
 data$In_Flight_and_Baggage_Ratings <- rowMeans(ratings_group2, na.rm = TRUE)
-summary(data)
 
 data_ratings_combined <- data[c("Pre_Flight_and_WiFi_Ratings","In_Flight_and_Baggage_Ratings")]
+
+summary(data_ratings_combined)
 
 
 ```
 
-```{r ratings_matrix_final, include = FALSE}
+```{r ratings_matrix_final, include=FALSE}
 
 cor_matrix_2 <- cor(data_ratings_combined, method = 'spearman')
 
@@ -733,14 +610,11 @@ ratings_correlation_coeff_final
 
 ```
 
-<br>
 
 The two consolidated ratings variables share a weak positive correlation (correlation coefficient = **`r ratings_correlation_coeff_final`**), indicating that they can be jointly included in our model without violating the collinearity assumption.
 
-<br>
 
-
-```{r ratings_final_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+```{r ratings_final_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
 # Define ratings subset of main data frame
 data_ratings_final <- data[c('Pre_Flight_and_WiFi_Ratings','In_Flight_and_Baggage_Ratings')]
@@ -775,25 +649,94 @@ ratingsgraph_final <- ggplot(data_long_final, aes(x = value, fill = variable)) +
   scale_y_continuous(labels = commas) + 
   labs(fill = "Ratings Variables")
 
-ratingsgraph_final + ggtitle("Histogram of aggregated ratings variables\n")
+ratingsgraph_final + ggtitle("\nHistogram of aggregated ratings variables\n")
 ```
-<br>
 
 
-<br>
 
-### EDA: Linearity with log odds
+# Ruling out the linear model
 
-<br>
-```{r encode satisfaction}
+
+Before engaging in further analysis, we first identified that satisfaction—as a categorical/binary variable—cannot be reliably predicted through a linear model. View the model below and its predicted vs. actual values for a rough demonstration of this roadblock.
+
+```{r encoding, echo=FALSE}
 # Encode the satisfaction variable as 1/0 to use temporarily for JB analysis section, should be removed since this will be closer to the start in the full script
 
 data$satisfaction <- ifelse(data$satisfaction == "satisfied", 1, 0)
 
-# REMOVE IN FINAL
+data$Gender <- ifelse(data$Gender == "Male", 1, 0)
+
+data$Customer.Type <- ifelse(data$Customer.Type == "Loyal Customer", 1, 0)
+
+data$Type.of.Travel <- ifelse(data$Type.of.Travel == "Business travel", 1, 0)
+
+data$Class <- ifelse(data$Class %in% c("Eco", "Eco Plus"), 0, 
+                     ifelse(data$Class == "Business", 1, NA))
+
 ```
-<br>
-```{r discrete, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+
+```{r linear_model, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+linear_model <- lm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance, data = data)
+
+summary(linear_model)
+
+plot_data <- data.frame(
+  Observed = data$satisfaction,  # Replace with your actual dependent variable
+  Predicted = predict(linear_model)
+)
+
+# Create the plot
+ggplot(plot_data, aes(x = Predicted, y = Observed)) +
+  geom_point(aes(color = factor(Observed))) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "purple", size = 2) +
+  labs(
+    title = "Predicted vs. Observed Binary Values\n",
+    x = "\nPredicted Values",
+    y = "Observed Values\n"
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    #axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )  +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"))
+
+
+
+```
+
+
+
+We can see that, despite purportedly containing various coefficients of high statistical significance, **the linear model is fundamentally incapable of modeling binary output**. For various x-values, the linear model predicts unattainable values between satisfied or neutral/dissatisfied (encoded as 1 and 0 respectively).
+
+
+
+
+Rather than a linear model, we will evaluate and prepare the data for use in a **logistic regression**, which predicts the log odds of satisfaction. Such models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. 
+
+
+Assumptions are altered as follows:
+
+- **Linearity**: Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds
+
+- **Independence of Errors**: Remains as an assumption for both linear and logistic models
+
+- **Homoscedasticity**: Not required under logistic regression
+
+- **Normally distributed residuals**: Not required under logistic regression
+
+- **Multicollinearity**: Remains as an assumption for both linear and logistic models
+
+
+
+# Testing Linearity with log odds
+
+```{r discrete, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
 # Calculate the discrete buckets for each variable
 age_breaks <- seq(0, 90, by = 2)
@@ -808,23 +751,17 @@ data$DepDelayCategory<- cut(data$Departure.Delay.in.Minutes, breaks = delay_brea
 data$ArrDelayCategory<- cut(data$Arrival.Delay.in.Minutes, breaks = delay_breaks)
 data$PreFlightCategory<-cut(data$Pre_Flight_and_WiFi_Ratings, breaks = rating_breaks)
 data$InFlightCategory<-cut(data$In_Flight_and_Baggage_Ratings, breaks = rating_breaks)
-
-
-
-
 ```
 
-<br>
 
 Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds**.\
 
 Odds represent the number of favorable outcomes divided by the number of unfavorable outcomes. Put differently, if "p" represents the probability of favorable outcomes, Odds = **p/(1-p)**. Log odds take the natural log of the odds, which can be expressed as **ln(p/1-p))**.
 
-We can use a visual test to examine whether or not this assumption holds true for continuous variables. While it is not sensible to compute log odds for individual data points, we can group continuous variables into discrete buckets to examine whether or not they would satisfy this assumption.
+We can use a visual test to examine whether or not this assumption holds true for continuous variables. While it is not sensible to compute log odds for individual data points, we can group continuous variables into discrete buckets—calculating the average log odds for each—to examine whether or not they might satisfy this assumption.
 
-<br>
 
-```{r log_odds, include = FALSE}
+```{r log_odds, echo=FALSE}
 
 # Define a function to calculate the log odds for a given x value, to use with aggregate()
 
@@ -844,9 +781,10 @@ log_odds_PreFlight <- aggregate(satisfaction ~ PreFlightCategory, data, log_odds
 log_odds_InFlight <- aggregate(satisfaction ~ InFlightCategory, data, log_odds_calc)
 
 ```
-<br>
 
-```{r log_odds_cont_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+
+
+```{r log_odds_cont_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
 # Create scatter plots for "original" continuous variables
 
@@ -928,13 +866,12 @@ ggplot(log_odds_ArrDelay, aes(x = ArrDelayCategory, y = satisfaction)) +
 
 ``` 
 
-<br>
-<br>
-<br>
-Based on the graphs, it appears that only flight distance has a roughly linear relationship with log odds of satisfaction. Age appears to have a parabolic relationship, peaking in the middle; some sort of aggressive transformation method may be required to reach a linear relationship. Meanwhile, log odds for both delay statistics quickly disperse in both directions as they increase (likely in part due to the limited frequency of higher durations), making it difficult to conclude with certainty that a linear relationship exists.
 
 
-```{r log_odds_ratings_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo = FALSE}
+Out of the graphs above, it appears that only flight distance has a roughly linear relationship with log odds of satisfaction. Age appears to have a parabolic relationship, peaking in the middle; some sort of aggressive transformation method may be required to reach a linear relationship. Meanwhile, log odds for both delay statistics quickly disperse in both directions as they increase (likely in part due to the limited frequency of higher durations), making it difficult to conclude with certainty that a linear relationship exists.
+
+
+```{r log_odds_ratings_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
 # Create scatter plots for aggregate ratings variables
 
@@ -976,6 +913,6 @@ ggplot(log_odds_InFlight, aes(x = InFlightCategory, y = satisfaction)) +
 
 
 ```
-<br>
+
 
 In-flight and baggage ratings have a strikingly linear relationship with log odds; meanwhile, pre-flight and wi-fi ratings appear to have a significantly looser connection with a potential dip in log odds for average ratings. We can conclude with confidence that the in-flight aggregate fulfills the linearity assumption, while the pre-flight ratings are far more obscure in that regard. 
