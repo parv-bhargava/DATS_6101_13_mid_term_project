@@ -1,0 +1,1 @@
+[Spearman VS Chi-sq independence test](https://www.researchgate.net/post/What-is-the-difference-between-the-Spearman-rank-order-correlation-and-Chi-sq-test-for-Independence#:~:text=If%20you%20are%20interested%20in,is%20the%20better%20approach%20here.)
