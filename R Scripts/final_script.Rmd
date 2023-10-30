@@ -182,18 +182,78 @@ table_head
 str(data)
 ```
 
+- X and id: These columns seem to represent some unique identifier for each observation. X appears to be an integer index, while id is also an integer and likely represents a customer ID or some form of identifier.
+
+- Gender: This column seems to contain information about the gender of the passengers, with values such as "Male" and "Female."
+
+- Customer.Type: This variable describes the type of customer, with categories like "Loyal Customer" and "disloyal Customer."
+
+- Age: Represents the age of the passengers and is an integer variable.
+
+- Type.of.Travel: Indicates the purpose of travel, with categories like "Personal Travel" and "Business travel."
+
+- Class: Specifies the class of travel, with categories like "Eco Plus" and "Business."
+
+- Flight.Distance: This variable contains the distance of the flight in miles as an integer.
+
+- Inflight.wifi.service, Departure.Arrival.time.convenient, and several other columns: These variables seem to represent passengers' ratings or feedback on different aspects of their flight experience. They are integer variables with ratings ranging from 1 to 5.
+
+- Departure.Delay.in.Minutes and Arrival.Delay.in.Minutes: These columns appear to represent the delay in minutes for departure and arrival, respectively. Departure delay is an integer, while arrival delay is a numeric variable.
+
+- satisfaction: This is the target variable or the outcome of interest, and it appears to represent customer satisfaction levels with values like "neutral or dissatisfied" and "satisfied."
+
 
 #### Data dimensions
 ```{r dimension of the data,echo=FALSE}
 dim(data)
 ```
-
+It is a data frame with 103,904 observations (rows) and 25 variables (columns)
 
 #### An initial description of the data
 
 ```{r description,max.height = "500px",echo=FALSE }
 describe(data)
 ```
+
+1. **Variable X and ID**: 
+   - Variable 'X' is an integer index ranging from 0 to 103903 with no missing values.
+   - Variable 'id' represents customer IDs and is also an integer, ranging from 1 to 129880 with no missing values.
+
+2. **Gender**:
+   - There are two distinct values, 'Female' and 'Male,' with roughly equal proportions of female (50.7%) and male (49.3%) passengers.
+
+3. **Customer Type**:
+   - Two distinct types of customers are present: 'disloyal Customer' and 'Loyal Customer.' 'Loyal Customer' is the dominant type, accounting for approximately 81.7% of passengers.
+
+4. **Age**:
+   - The age variable ranges from 7 to 85 with a mean age of approximately 39.38.
+
+5. **Type of Travel**:
+   - There are two types of travel: 'Business travel' (69.0%) and 'Personal Travel' (31.0%). Business travel is the more common type.
+
+6. **Class**:
+   - Three distinct classes are available: 'Business,' 'Eco,' and 'Eco Plus.'
+   - 'Business' class is the most popular (47.8%), followed by 'Eco' (45.0%) and 'Eco Plus' (7.2%).
+
+7. **Flight Distance**:
+   - The mean flight distance is approximately 1189 miles, ranging from 175 to 3383 miles.
+
+8. **Inflight Wifi Service**, **Departure Arrival Time Convenient**, **Ease of Online Booking**, **Gate Location**, **Food and Drink**, **Online Boarding**, **Seat Comfort**, **Inflight Entertainment**, **On-Board Service**, **Legroom Service**, **Baggage Handling**, **Check-In Service**, **Inflight Service**, and **Cleanliness**:
+   - These variables represent passengers' ratings on a scale from 0 to 5 for various aspects of their flight experience.
+   - The mean ratings for each of these variables fall between 2.73 and 3.64.
+
+9. **Departure Delay in Minutes**:
+   - The majority of flights have no departure delay (mean delay of 14.82 minutes).
+   - Delays range from 0 to 78 minutes.
+
+10. **Arrival Delay in Minutes**:
+   - Arrival delays are similar to departure delays, with the majority having no delay (mean delay of 15.18 minutes).
+   - Delays range from 0 to 79 minutes.
+
+11. **Satisfaction**:
+   - There are two categories of satisfaction: 'neutral or dissatisfied' (56.7%) and 'satisfied' (43.3%).
+   - Overall, more passengers appear to be 'neutral or dissatisfied' with their flight experience.
+   
 
 ##  Data Pre-processing
 
