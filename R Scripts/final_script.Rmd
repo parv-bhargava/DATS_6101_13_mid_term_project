@@ -2,14 +2,8 @@
 title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
 author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
 date: "2023-10-20"
-output:
-  prettydoc::html_pretty:
-    theme: cayman
-    highlight: github
-    toc: yes    
+output: rmdformats::downcute
 ---
-
-
 
 ```{r init, include=FALSE}
 # Load the 'psych' package for various functions related statistics
@@ -185,10 +179,7 @@ We first imported the data into R by using `read.csv()` function. The first few 
 
 ```{r data,echo=FALSE}
 data <- read.csv("C:\\Users\\parvb\\Desktop\\Intro to DS\\Group Project\\group_project_r\\archive\\train.csv")
-table_head <- kableExtra::scroll_box(xkabledplyhead(data, title = "Head for the data",
-  pos = "left",
-  bso = "striped"), width = "100%", height = "100%")
-table_head
+xkabledplyhead(data, pos = "left", bso = "striped")
 ```
 
 
@@ -221,7 +212,7 @@ str(data)
 
 
 #### Data dimensions
-```{r dimension of the data,echo=FALSE}
+```{r dimension of the data,include=FALSE}
 dims <- dim(data)
 dims
 ```
@@ -292,10 +283,9 @@ It has total `r sum(duplicated(data))` duplicate values
 
 The following table shows the NA values in our dataset:
 ```{r result_missing,echo=FALSE}
-table_1 <- kableExtra::scroll_box(xkabledply(missing_data , title = "Missing Values — Initial",
+xkabledply(missing_data , title = "Missing Values — Initial",
   pos = "left",
-  bso = "striped"), width = "100%", height = "100%")
-table_1
+  bso = "striped")
 ```
 
 We elected to replace these 310 NA values in arrival delays with the median delay; this method was used over other potential replacement options, such as the average, due to the skewed distribution of values detailed later on.
@@ -332,9 +322,9 @@ Responses for the ratings variables are coded as values from 1-5. However, some 
 
 
 ```{r result_dpp,echo=FALSE}
-table_2 <- kableExtra::scroll_box(xkabledply(missing_data , title = "Missing Values — Final",
+table_2 <- xkabledply(missing_data , title = "Missing Values — Final",
   pos = "left",
-  bso = "striped"), width = "100%", height = "100%")
+  bso = "striped")
 table_2
 ```
 
