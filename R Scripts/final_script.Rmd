@@ -541,13 +541,13 @@ for (feature in categorical_features) {
 
 ***
 
-*Gender:* Both genders have a fairly similar distribution of satisfaction levels.
+*Gender:* It's interesting to note that gender doesn't appear to be a significant factor in determining passenger satisfaction levels. The data indicates that both male and female passengers have fairly similar distributions of satisfaction levels. This suggests that gender does not play a prominent role in influencing the overall satisfaction of passengers.
 
-*Customer Type:* Loyal customers tend to be more satisfied than disloyal ones.
+*Customer Type:* A distinct trend emerges in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. This underscores the critical role of customer loyalty in building and maintaining high levels of satisfaction.
 
-*Type of Travel:* Passengers traveling for business purposes are generally more satisfied than those traveling for personal reasons.
+*Type of Travel:* The purpose of travel plays a crucial role in passenger satisfaction. Business travelers, those journeying for professional purposes, generally express higher levels of satisfaction than those traveling for personal reasons. This suggests that airlines may need to tailor their services to better meet the needs and expectations of different types of travelers.
 
-*Class:* Business class passengers are noticeably more satisfied than those in Eco or Eco Plus.
+*Class:* The class of service provided to passengers has a noticeable impact on satisfaction levels. Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. This observation highlights the importance of offering differentiated services and amenities in various travel classes to meet the diverse preferences and expectations of passengers. It also emphasizes the potential for revenue generation through premium services.
 
 ***
 
