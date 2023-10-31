@@ -507,13 +507,13 @@ grid.arrange(grobs = boxplot_list, ncol = 2)
 
 ***
 
-*Age:* Satisfied customers tend to be older than neutral or dissatisfied customers.
+*Age:* It is noteworthy that customer satisfaction levels exhibit a correlation with age. The data suggests that older passengers tend to be more satisfied with their flights compared to their younger counterparts. This demographic trend underscores the importance of age as a factor influencing passenger contentment.
 
-*Flight Distance:* Satisfied customers, on average, seem to travel longer distances.
+*Flight Distance:* An intriguing trend emerges when examining flight distance in relation to customer satisfaction. On average, passengers who embark on longer journeys tend to report higher levels of satisfaction. This pattern implies that extended travel distances are associated with increased contentment among passengers.
 
-*Departure Delay in Minutes:* Flights with higher departure delays tend to have slightly more neutral or dissatisfied customers.
+*Departure Delay in Minutes:* When exploring the relationship between departure delays and customer satisfaction, a nuanced trend becomes apparent. Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers. This suggests that prolonged delays before takeoff may have a diminishing effect on passenger contentment.
 
-*Arrival Delay in Minutes:* Similarly, flights with higher arrival delays tend to have slightly more neutral or dissatisfied customers.
+*Arrival Delay in Minutes:* A similar pattern can be observed in the context of arrival delays. Flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the impact of delays, both at departure and arrival, on passenger satisfaction, highlighting the importance of timely and efficient operations to enhance the overall travel experience.
 
 ***
 
