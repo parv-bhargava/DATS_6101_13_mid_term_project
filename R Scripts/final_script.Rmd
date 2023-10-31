@@ -6,7 +6,7 @@ output:
   prettydoc::html_pretty:
     theme: cayman
     highlight: github
-    toc: yes
+    toc: yes    
 ---
 
 
@@ -183,7 +183,7 @@ While the analysis and insight generation opportunities are manyfold, certain fi
 ## Loading the Data
 We first imported the data into R by using `read.csv()` function. The first few rows in the dataset are included below.
 
-```{r data}
+```{r data,echo=FALSE}
 data <- read.csv("C:\\Users\\parvb\\Desktop\\Intro to DS\\Group Project\\group_project_r\\archive\\train.csv")
 table_head <- kableExtra::scroll_box(xkabledplyhead(data, title = "Head for the data",
   pos = "left",
