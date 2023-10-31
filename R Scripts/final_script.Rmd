@@ -578,9 +578,9 @@ for (feature in numerical_features) {
 
 ***
 
-*Age:* Middle-aged passengers tend to be more satisfied than younger and older age groups.
+*Age:* The data suggests that middle-aged passengers tend to exhibit higher levels of satisfaction compared to both younger and older age groups. This observation underscores the importance of catering to the specific needs and preferences of passengers in different age categories to enhance overall customer satisfaction.
 
-*Flight Distance:* Passengers traveling shorter distances seem to be more neutral or dissatisfied compared to those traveling longer distances.
+*Flight Distance:* An interesting trend emerges when considering flight distance in relation to passenger satisfaction. Passengers traveling shorter distances appear to be more inclined towards neutrality or dissatisfaction compared to those embarking on longer journeys. This insight suggests that there might be unique challenges or aspects of shorter flights that influence passenger contentment and warrant further investigation.
 
 *Arrival/Departure Delays:* It is difficult to discern any meaningful differences between passengers that were satisfied or neutral/dissatisfied based on arrival or departure delay durations using this method. To expand upon these visuals—potentially revealing more significant observations—we utilized a scatter plot.
 
