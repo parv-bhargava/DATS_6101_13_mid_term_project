@@ -483,9 +483,9 @@ if (length(rating_plots) > 0) {
 }
 ```
 
-
+Departure Arrival time convenient, Food and Drinks, Online boarding, Seat comfort, Inflight Entertainment, On board service, Leg room service, Baggage handling, Checkin service, Inflight service and Cleanliness are all having a rating of 4.
+Inflight wifi service, Gate location and Ease of online booking all having a rating of 3.
 Many of the distributions for individual ratings variables look quite similar, raising multicollinearity concerns that will be addressed later.
-
 
 ## Box-Plots Related to the Target Variable (Satisfaction)
 
