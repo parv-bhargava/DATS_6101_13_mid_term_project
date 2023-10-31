@@ -2,7 +2,12 @@
 title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
 author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
 date: "2023-10-20"
-output: html_document
+output: 
+  html_document:
+    number_sections: true
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
 ---
 
 
@@ -77,16 +82,16 @@ local({
 
 # Introduction
 
-Airline passenger satisfaction is a crucial aspect of the aviation industry. Understanding the factors that lead to customer satisfaction is essential for airlines to improve their services and compete effectively in the highly competitive market. In this research, we aim to analyze the various factors that affect airline passenger satisfaction using a dataset that contains a wide range of variables related to the passenger's experience.
+Airline passenger satisfaction is a crucial metric for firms in the airline industry. Understanding the factors that contribute to customer satisfaction is essential for airlines to improve their services and compete effectively; high market saturation, as well as low profit margins, can magnify the effects of small advantages or disadvantages relative to other firms (Lutz et al., 2012; Hardee, 2023). In this research, we will analyze various factors that affect airline passenger satisfaction — provided through a survey dataset — and, ultimately, judge their suitability for a regression model predicting passenger satisfaction.
 
 ## Research Proposal
 
-Our research focuses on analyzing factors affecting airline passenger satisfaction. We will utilize a survey dataset that contains various aspects of the airline flight experience to evaluate its suitability for creating a logistic regression model predicting passenger satisfaction. This research can be valuable for airlines looking to enhance their customers' experiences and compete effectively in the industry.
+Our research will first look at individual variables in the aforementioned survey dataset to examine distributions and other characteristics. Then, we will identify a regression model that may be congruent with our dataset and test assumptions associated with the model. 
 
-We will leverage a dataset that includes surveyed passenger characteristics, flight details, and satisfaction ratings for select pre-flight and in-flight components. To ensure modeling suitability, we will conduct exploratory data analysis, taking into account variable distributions and types.
+We will leverage a Kaggle dataset that includes surveyed passenger characteristics, flight details, and satisfaction ratings for select pre-flight and in-flight components (Klein, 2020). To ensure modeling suitability, we will conduct exploratory data analysis, taking into account variable distributions and types. 
 
 ### SMART Questions
-Our research aims to answer the following questions:
+With our research, we aim to make progress towards answering the following questions:
 
 1. **To what extent do certain surveyed passenger characteristics and flight experience components impact the likelihood that a passenger will be satisfied – rather than neutral or dissatisfied – with their trip?**
 
@@ -96,15 +101,15 @@ Our research aims to answer the following questions:
 
 ### Objective
 
-This research offers an opportunity to assess the limitations of linear regression models in predicting passenger satisfaction. By complementing our analysis with exploratory data analysis (EDA), we can illustrate why a linear regression model may not be suitable for this analysis. This will lay the groundwork for our future research on logistic regression.
+This research offers an opportunity to assess the limitations of linear regression models in predicting passenger satisfaction, specifically with regards to the categorical nature of the output in this dataset. Through exploratory data analysis (EDA), we can identify the characteristics of our data and subsequently illustrate why a linear regression model may not be suitable for this analysis. This will lay the groundwork for our future research on logistic regression.
 
 In summary, our research will provide insights into the intricate relationship between passenger characteristics, flight experience, and satisfaction levels. We will also explore the limitations of linear regression models and prepare the foundation for a more advanced logistic regression approach in future analysis.
 
-### Data Variables
+### Dataset Variables
 
-The dataset for our research on airline passenger satisfaction contains various variables, which can be categorized into three types: numeric, categorical, and ordinal. In this section, we'll list and briefly explain each of these variables.
+The dataset for our research on airline passenger satisfaction contains various variables, which can be categorized into three types: continuous, categorical, and ordinal. In this section, we'll list and briefly explain each of these variables.
 
-#### Numeric Variables
+#### Continuous Variables
 
 1. **Age**: This variable represents the actual age of the passengers.
 
@@ -116,19 +121,19 @@ The dataset for our research on airline passenger satisfaction contains various 
 
 #### Categorical Variables
 
-1. **Gender**: Gender is a categorical variable with two levels, "Female" and "Male," indicating the gender of the passengers.
+1. **Gender**: Gender is a categorical variable indicating the gender of the passengers.
 
-2. **Customer Type**: The "Customer Type" variable categorizes passengers as either "Loyal customer" or "Disloyal customer," based on their customer loyalty.
+2. **Customer Type**: The "Customer Type" variable categorizes passengers based on their customer loyalty.
 
-3. **Type of Travel**: This variable categorizes the purpose of the flight, with two levels, "Personal Travel" and "Business Travel."
+3. **Type of Travel**: This variable categorizes the purpose of the flight.
 
-4. **Class**: "Class" indicates the travel class in the plane and includes levels "Business," "Economy," and "Economy Plus."
+4. **Class**: "Class" indicates the travel class in the plane.
 
 ### Ordinal Variables
 
-The following variables represent satisfaction levels, which are ordinal in nature, with values ranging from 0 to 5.
+The following variables represent satisfaction levels, which are ordinal in nature, with values ranging from 0 to 5. According to the documentation, 0 is used to encode "Not Applicable" values.
 
-1. **Inflight Wifi Service**: Satisfaction level of the inflight wifi service (0: Not Applicable; 1-5).
+1. **Inflight Wifi Service**: Satisfaction level of the inflight wifi service.
 
 2. **Departure/Arrival Time Convenient**: Satisfaction level of departure/arrival time convenience.
 
@@ -158,16 +163,28 @@ The following variables represent satisfaction levels, which are ordinal in natu
 
 ### Target Variable
 
-- **Satisfaction**: The "Satisfaction" variable represents the airline passenger's satisfaction level and includes three categories: "Satisfaction," "Neutral," or "Dissatisfaction." This will be our primary outcome variable for analysis.
+- **Satisfaction**: The "Satisfaction" variable represents the airline passenger's satisfaction level and includes two categories: "satisfied" or "neutral or dissatisfied." This will be our primary outcome variable for analysis.
 
 In our research, we will explore how these variables interact and contribute to passenger satisfaction levels. We will use statistical methods and modeling techniques to gain insights into the factors that lead to customer satisfaction for an airline.
 
+### Variable limitations
+
+While the analysis and insight generation opportunities are manyfold, certain fields in this dataset can present challenges limiting a resulting model's predictive validity. These include:
+
+- **Data collection**: this dataset was sourced from Kaggle (Klein, 2020). While some variable-related documentation is available, we are not able to discern the circumstances under which this survey was distributed. The population may have been sampled through certain methods—such as convenience sampling—that make resulting data less representative of the overall population despite the large observation count. The overall population in question also is not clear; the survey may have focused on a particular airport or region, limiting potential predictive validity in alternative settings.
+
+- **Loyal/disloyal clarity**: the document does not elaborate upon what counts as a "loyal" or "disloyal" customer for that field. This makes it difficult to properly interpret the effects of such a variable in a regression model. The threshold for disloyalty could potentially range from using any other airlines at all to using other airlines a majority of the time, drastically altering any potential real-world applications.
+
+- **Ticket prices**: ticket prices are not included in this survey, with class serving as a rough proxy; intuitively, such prices could play a major factor in passengers' service expectations and their subsequent ratings. The lack of price ranges associated with seat class also makes it difficult to encode the three categories in a way that accurately captures the disparity.
+
+
+
 
 ## Loading the Data
-We first imported the data into R by using `read.csv()` function.
+We first imported the data into R by using `read.csv()` function. The first few rows in the dataset are included below.
 
 ```{r data}
-data <- read.csv("archive/train.csv")
+data <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\train.csv")
 table_head <- kableExtra::scroll_box(xkabledplyhead(data, title = "Head for the data",
   pos = "left",
   bso = "striped"), width = "100%", height = "100%")
@@ -182,32 +199,33 @@ table_head
 str(data)
 ```
 
-- X and id: These columns seem to represent some unique identifier for each observation. X appears to be an integer index, while id is also an integer and likely represents a customer ID or some form of identifier.
+- X and id: These columns represent some unique identifiers for each observation. X appears to be an integer index, while id is also an integer and likely represents a customer ID or some form of identifier.
 
-- Gender: This column seems to contain information about the gender of the passengers, with values such as "Male" and "Female."
+- Gender: This column contains information about the gender of the passengers, with values such as "Male" and "Female."
 
-- Customer.Type: This variable describes the type of customer, with categories like "Loyal Customer" and "disloyal Customer."
+- Customer.Type: This variable describes the customer as a "Loyal Customer" or a "disloyal Customer."
 
 - Age: Represents the age of the passengers and is an integer variable.
 
-- Type.of.Travel: Indicates the purpose of travel, with categories like "Personal Travel" and "Business travel."
+- Type.of.Travel: Indicates the purpose of travel with two levels, "Personal Travel" and "Business Travel."
 
-- Class: Specifies the class of travel, with categories like "Eco Plus" and "Business."
+- Class: Specifies the class of travel with three levels, including "Business," "Economy," and "Economy Plus."
 
 - Flight.Distance: This variable contains the distance of the flight in miles as an integer.
 
-- Inflight.wifi.service, Departure.Arrival.time.convenient, and several other columns: These variables seem to represent passengers' ratings or feedback on different aspects of their flight experience. They are integer variables with ratings ranging from 1 to 5.
+- Inflight.wifi.service, Departure.Arrival.time.convenient, and several other columns: These variables seem to represent passengers' ratings or feedback on different aspects of their flight experience. They are integer variables with ratings ranging from 0 to 5.
 
-- Departure.Delay.in.Minutes and Arrival.Delay.in.Minutes: These columns appear to represent the delay in minutes for departure and arrival, respectively. Departure delay is an integer, while arrival delay is a numeric variable.
+- Departure.Delay.in.Minutes and Arrival.Delay.in.Minutes: These columns represent the delay in minutes for departure and arrival, respectively. Departure delay is an integer, while arrival delay is a numeric variable; this betrays initial expectations, since we would have expected both delay columns to contain identical types. The likely culprit is a discrepancy in respondents' uses of decimal values to represent delays.
 
-- satisfaction: This is the target variable or the outcome of interest, and it appears to represent customer satisfaction levels with values like "neutral or dissatisfied" and "satisfied."
+- satisfaction: This is the target variable or the outcome of interest, and it represents customer satisfaction levels with values like "neutral or dissatisfied" and "satisfied."
 
 
 #### Data dimensions
 ```{r dimension of the data,echo=FALSE}
-dim(data)
+dims <- dim(data)
+dims
 ```
-It is a data frame with 103,904 observations (rows) and 25 variables (columns)
+This is a data frame with **`r dims[1]`** observations (rows) and **`r dims[2]`** variables (columns). Assuming that a robust sampling method was utilized, the large number of observations may allow us to conclude that the data is generally representative of the actual population.
 
 #### An initial description of the data
 
@@ -226,21 +244,22 @@ describe(data)
    - Two distinct types of customers are present: 'disloyal Customer' and 'Loyal Customer.' 'Loyal Customer' is the dominant type, accounting for approximately 81.7% of passengers.
 
 4. **Age**:
-   - The age variable ranges from 7 to 85 with a mean age of approximately 39.38.
+   - The age variable ranges from 7 to 85 with a mean age of approximately 39.38. 50% of the respondents' ages fall between 27 and 51.
 
 5. **Type of Travel**:
-   - There are two types of travel: 'Business travel' (69.0%) and 'Personal Travel' (31.0%). Business travel is the more common type.
+   - There are two types of travel: 'Business travel' (69.0%) and 'Personal Travel' (31.0%). Business travel is the more common type by far.
 
 6. **Class**:
    - Three distinct classes are available: 'Business,' 'Eco,' and 'Eco Plus.'
    - 'Business' class is the most popular (47.8%), followed by 'Eco' (45.0%) and 'Eco Plus' (7.2%).
 
 7. **Flight Distance**:
-   - The mean flight distance is approximately 1189 miles, ranging from 175 to 3383 miles.
+   - The mean flight distance is approximately 1189 miles, with values ranging from 175 to 3383 miles.
 
 8. **Inflight Wifi Service**, **Departure Arrival Time Convenient**, **Ease of Online Booking**, **Gate Location**, **Food and Drink**, **Online Boarding**, **Seat Comfort**, **Inflight Entertainment**, **On-Board Service**, **Legroom Service**, **Baggage Handling**, **Check-In Service**, **Inflight Service**, and **Cleanliness**:
    - These variables represent passengers' ratings on a scale from 0 to 5 for various aspects of their flight experience.
    - The mean ratings for each of these variables fall between 2.73 and 3.64.
+   - 4 appears to be the most commonly selected option for most individual ratings.
 
 9. **Departure Delay in Minutes**:
    - The majority of flights have no departure delay (mean delay of 14.82 minutes).
@@ -279,7 +298,7 @@ table_1 <- kableExtra::scroll_box(xkabledply(missing_data , title = "Missing Val
 table_1
 ```
 
-We elected to replace these 310 NA values in arrival delays with the median delay; this method was used over other potential replacement options, such as the average, due to the skewed distribution.
+We elected to replace these 310 NA values in arrival delays with the median delay; this method was used over other potential replacement options, such as the average, due to the skewed distribution of values detailed later on.
 
 
 ```{r data preprocessing, echo=FALSE}
@@ -308,7 +327,7 @@ missing_data <- data %>%
 The table below demonstrates that all missing values have been replaced; the "X" and "id" fields for index number and survey ID are also removed from the data frame due to their limited relevance for modeling.
 
 
-Responses for the ratings variables are coded as values from 1-5. However, some responses include 0, representing that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out.
+Responses for the ratings variables are coded as values from 1-5. However, some responses include 0; as noted earlier, this indicates that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out to ensure that all of the individual ratings are relevant for all observations. While alternatives exist, such as replacement, the large number of initial observations limited our concerns over a potential loss in predictive validity.
 
 
 
@@ -388,6 +407,14 @@ grid.arrange(grobs = plot_list, ncol = 2)
 ```
 
 
+The plots above provide visual representations for the summary statistics detailed earlier. While none initially appear to be highly correlated, we intend to confirm this using variance inflation factor (VIF) analysis at a later time once our model is fleshed out ("vif: Variance Inflation Factors", n.d.).
+
+Given a robust sampling method, we can safely assume that these distributions (including the highly skewed ones) are representative of the overall population.
+
+Looking at the distribution of class, Eco Plus has a significantly lower observation frequency than the other two. In addition, as noted earlier, the magnitudes of increments between Eco, Eco Plus, and Business are not clear; some transformation may be required later to ensure modeling suitability.
+
+
+
 ```{r variables, include=FALSE}
 numerical_vars_ggplot <- c('Age', 'Flight.Distance', 'Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 
@@ -416,6 +443,14 @@ if (length(continuous_plots) > 0) {
 }
 
 ```
+
+
+From the graphs above, flight distance as well as both delay variables have a strongly right-skewed distribution. This makes sense intuitively; we would expect most flights to have minimal to no delays, and shorter flights are likely more common. 
+
+Age is the only variable that somewhat approximates a normal distribution (although that cannot be safely assumed); the current graph appears to be bimodal to a degree, with a small peak around 20-25 and another peak roughly around 35-50. 
+
+Depending on the type of regression that is ultimately selected, some of these variables may require aggressive transformations to better approximate normal distributions.
+
 
 ## Frequency distributions for ordinal variables (Ratings)
 
@@ -448,6 +483,10 @@ if (length(rating_plots) > 0) {
 }
 ```
 
+
+Many of the distributions for individual ratings variables look quite similar, raising multicollinearity concerns that will be addressed later.
+
+
 ## Box-Plots Related to the Target Variable (Satisfaction)
 
 The box-plots below are utilized to explore how different numerical features interact with the target variable (satisfaction).
@@ -472,6 +511,7 @@ for (num_var in histogram_vars) {
 
 grid.arrange(grobs = boxplot_list, ncol = 2)
 ```
+
 
 #### Observations
 
@@ -521,7 +561,7 @@ for (feature in categorical_features) {
 
 ***
 
-## Distribution of numerical features by satisfaction - KDE (Kernel Density Estimation)
+## Distribution of continuous variable features by satisfaction - KDE (Kernel Density Estimation)
 
 ```{r numeric_dist, echo=FALSE}
 
@@ -714,10 +754,10 @@ ratingsgraph_final + ggtitle("\nHistogram of aggregated ratings variables\n")
 
 
 
-# Ruling out the linear model
+# Ruling out the standard linear model
 
 
-Before engaging in further analysis, we first identified that satisfaction—as a categorical/binary variable—cannot be reliably predicted through a linear model. View the model below and its predicted vs. actual values for a rough demonstration of this roadblock.
+Before engaging in further analysis, we first identified that satisfaction—as a categorical/binary variable—cannot be reliably predicted through a standard linear model. View the model below and its predicted vs. actual values for a rough demonstration of this roadblock.
 
 ```{r encoding, echo=FALSE}
 # Encode the satisfaction variable as 1/0 to use temporarily for JB analysis section, should be removed since this will be closer to the start in the full script
@@ -772,12 +812,12 @@ ggplot(plot_data, aes(x = Predicted, y = Observed)) +
 
 
 
-We can see that, despite purportedly containing various coefficients of high statistical significance, **the linear model is fundamentally incapable of modeling binary output**. For various x-values, the linear model predicts unattainable values between satisfied or neutral/dissatisfied (encoded as 1 and 0 respectively).
+We can see that, despite purportedly containing various coefficients of high statistical significance, **the standard linear model is fundamentally incapable of modeling binary output**. For various x-values, the linear model predicts unattainable values between satisfied or neutral/dissatisfied (encoded as 1 and 0 respectively).
 
 
 
 
-Rather than a linear model, we will evaluate and prepare the data for use in a **logistic regression**, which predicts the log odds of satisfaction. Such models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. 
+Rather than a linear model, we will evaluate and prepare the data for use in a **logistic regression**, which predicts the log odds of satisfaction. This is the dominant approach for modeling binary variables; a linear probability model—which sees use, particularly among social scientists—could potentially serve as a viable alternative, but an evaluation of this method will be reserved for a later date (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps ("Assumptions of Logistic Regression", n.d.). 
 
 
 Assumptions are altered as follows:
@@ -814,9 +854,9 @@ data$InFlightCategory<-cut(data$In_Flight_and_Baggage_Ratings, breaks = rating_b
 ```
 
 
-Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds**.\
+Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds** ("Assumptions of Logistic Regression", n.d.).
 
-Odds represent the number of favorable outcomes divided by the number of unfavorable outcomes. Put differently, if "p" represents the probability of favorable outcomes, Odds = **p/(1-p)**. Log odds take the natural log of the odds, which can be expressed as **ln(p/1-p))**.
+Odds represent the number of favorable outcomes divided by the number of unfavorable outcomes. Put differently, if "p" represents the probability of favorable outcomes, Odds = **p/(1-p)**. Log odds take the natural log of the odds, which can be expressed as **ln(p/1-p))** (Agarwal, 2019).
 
 We can use a visual test to examine whether or not this assumption holds true for continuous variables. While it is not sensible to compute log odds for individual data points, we can group continuous variables into discrete buckets—calculating the average log odds for each—to examine whether or not they might satisfy this assumption.
 
@@ -976,3 +1016,33 @@ ggplot(log_odds_InFlight, aes(x = InFlightCategory, y = satisfaction)) +
 
 
 In-flight and baggage ratings have a strikingly linear relationship with log odds; meanwhile, pre-flight and wi-fi ratings appear to have a significantly looser connection with a potential dip in log odds for average ratings. We can conclude with confidence that the in-flight aggregate fulfills the linearity assumption, while the pre-flight ratings are far more obscure in that regard. 
+
+
+# Conclusion
+
+Following our EDA attempts, our research questions remain relatively intact.
+
+1. A logistic regression model can help us understand the effects of certain variables on the likelihood of passenger satisfaction.   
+
+2. Efforts to test for log odds linearity and multicollinearity have helped us prepare for a model that minimizes predictive bias. Following an initial logistic regression model, VIF analysis and other strategies can be used to expand upon multicollinearity testing and examine statistical significance with hypothesis testing.
+
+3. It seems like continuous, ordinal, and categorical variables can all be feasibly combined as inputs in our predictive model. However, questions regarding encoding still remain for the class variable. The simplest approach would likely be to combine Eco and Eco Plus into a single category when encoding, turning class into a binary variable for modeling purposes and limiting necessary assumptions.
+
+4. In addition to our previous questions, the issue of interpretability emerges. Our intent is to generate a predictive model that can be applied by firms in the airline industry; however, that requires the model's various factors to correspond to real-world adjustments. For example, we may have to exponentiate model coefficients for more intuitive explanations (Allison, 2015). Variable aggregates and other potential transformations pose separate issues on this front as well. 
+
+
+# Citations
+
+Klein, TJ (2020). *Airline Passenger Satisfaction*. Kaggle. https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv
+
+Lutz, A., & Lubin, G. (2012). *Airlines Have An Insanely Small Profit Margin*. Business Insider. https://www.businessinsider.com/airlines-have-a-small-profit-margin-2012-6
+
+Hardee, H. (2023). *Frontier reports lacklustre Q3 results as it struggles in ‘over-saturated’ core markets*. FlightGlobal. https://www.flightglobal.com/strategy/frontier-reports-lacklustre-q3-results-as-it-struggles-in-over-saturated-core-markets/155561.article
+
+*vif: Variance Inflation Factors*. (n.d.). R Package Documentation. https://rdrr.io/cran/car/man/vif.html
+
+Allison, P. (2015, April 1). *What’s So Special About Logit?*. Statistical Horizons. https://statisticalhorizons.com/whats-so-special-about-logit/
+
+*Assumptions of Logistic Regression*. (n.d.). Statistics Solutions. https://www.statisticssolutions.com/free-resources/directory-of-statistical-analyses/assumptions-of-logistic-regression/
+
+Agarwal, P. (2019, July 8). *WHAT and WHY of Log Odds*. Towards Data Science. https://towardsdatascience.com/https-towardsdatascience-com-what-and-why-of-log-odds-64ba988bf704
