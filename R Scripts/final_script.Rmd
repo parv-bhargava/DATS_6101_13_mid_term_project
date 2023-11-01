@@ -178,7 +178,7 @@ While the analysis and insight generation opportunities are manyfold, certain fi
 We first imported the data into R by using `read.csv()` function. The first few rows in the dataset are included below.
 
 ```{r data,echo=FALSE}
-data <- read.csv("C:\\Users\\parvb\\Desktop\\Intro to DS\\Group Project\\group_project_r\\archive\\train.csv")
+data <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\train.csv")
 xkabledplyhead(data, pos = "left", bso = "striped")
 ```
 
@@ -435,7 +435,7 @@ if (length(continuous_plots) > 0) {
 ```
 
 
-From the graphs above, flight distance as well as both delay variables have a strongly right-skewed distribution. This makes sense intuitively; we would expect most flights to have minimal to no delays, and shorter flights are likely more common. 
+From the graphs above, flight distance as well as both delay variables have a strongly right-skewed distribution. This makes sense intuitively; we would expect most flights to have minimal to no delays, and shorter flights are likely more frequent. 
 
 Age is the only variable that somewhat approximates a normal distribution (although that cannot be safely assumed); the current graph appears to be bimodal to a degree, with a small peak around 20-25 and another peak roughly around 35-50. 
 
@@ -473,8 +473,8 @@ if (length(rating_plots) > 0) {
 }
 ```
 
-Departure Arrival time convenient, Food and Drinks, Online boarding, Seat comfort, Inflight Entertainment, On board service, Leg room service, Baggage handling, Checkin service, Inflight service and Cleanliness are all having a rating of 4.
-Inflight wifi service, Gate location and Ease of online booking all having a rating of 3.
+Departure Arrival time convenient, Food and Drinks, Online boarding, Seat comfort, Inflight Entertainment, On board service, Leg room service, Baggage handling, Checkin service, Inflight service and Cleanliness all have a mode value of 4.
+Inflight wifi service, Gate location and Ease of online booking all have a mode value of 3.
 Many of the distributions for individual ratings variables look quite similar, raising multicollinearity concerns that will be addressed later.
 
 ## Box-Plots Related to the Target Variable (Satisfaction)
@@ -503,19 +503,23 @@ grid.arrange(grobs = boxplot_list, ncol = 2)
 ```
 
 
+&nbsp;
+
 #### Observations
 
 ***
 
-*Age:* It is noteworthy that customer satisfaction levels exhibit a correlation with age. The data suggests that older passengers tend to be more satisfied with their flights compared to their younger counterparts. This demographic trend underscores the importance of age as a factor influencing passenger contentment.
+*Age:* Older passengers tend to be more satisfied with their flights compared to their younger counterparts; this suggests that, when looking further, we may find a significant correlation between age and passenger satisfaction.
 
-*Flight Distance:* An intriguing trend emerges when examining flight distance in relation to customer satisfaction. On average, passengers who embark on longer journeys tend to report higher levels of satisfaction. This pattern implies that extended travel distances are associated with increased contentment among passengers.
+*Flight Distance:* On average, passengers who embark on longer journeys tend to report higher levels of satisfaction. The basis for this trend is unclear at this time, but further investigation may yield actionable conclusions in this regard.
 
-*Departure Delay in Minutes:* When exploring the relationship between departure delays and customer satisfaction, a nuanced trend becomes apparent. Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers. This suggests that prolonged delays before takeoff may have a diminishing effect on passenger contentment.
+*Departure Delay in Minutes:* Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers. This supports the intuitive claim that prolonged delays before takeoff may have a diminishing effect on passenger contentment.
 
-*Arrival Delay in Minutes:* A similar pattern can be observed in the context of arrival delays. Flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the impact of delays, both at departure and arrival, on passenger satisfaction, highlighting the importance of timely and efficient operations to enhance the overall travel experience.
+*Arrival Delay in Minutes:* Similarly to departure delays, flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the potential impact of delays—both at departure and arrival—on passenger satisfaction, although more investigation is required to uncover the exact nature of this relationship.
 
 ***
+
+&nbsp;
 
 
 ```{r target_variable_histograms, echo=FALSE}
@@ -537,19 +541,23 @@ for (feature in categorical_features) {
 
 ```
 
+&nbsp;
+
 #### Observations
 
 ***
 
-*Gender:* It's interesting to note that gender doesn't appear to be a significant factor in determining passenger satisfaction levels. The data indicates that both male and female passengers have fairly similar distributions of satisfaction levels. This suggests that gender does not play a prominent role in influencing the overall satisfaction of passengers.
+*Gender:* Both male and female passengers have fairly similar distributions, indicating that gender may not play a prominent role in influencing overall passenger satisfaction.
 
-*Customer Type:* A distinct trend emerges in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. This underscores the critical role of customer loyalty in building and maintaining high levels of satisfaction.
+*Customer Type:* A distinct trend emerges in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. As noted earlier, interpretation may vary depending on how customer loyalty was defined while administering the survey; however, this general result supports the intuition that customer loyalty may be associated with a satisfactory experience.
 
-*Type of Travel:* The purpose of travel plays a crucial role in passenger satisfaction. Business travelers, those journeying for professional purposes, generally express higher levels of satisfaction than those traveling for personal reasons. This suggests that airlines may need to tailor their services to better meet the needs and expectations of different types of travelers.
+*Type of Travel:* There is a significant satisfaction between individuals traveling for business and personal reasons; a majority of business travelers were satisfied, while an overwhelming proportion of personal travelers expressed dissatisfaction or neutrality. The nature of this relationship, as well as actionable insights that may be drawn from it, are unclear at this point.
 
-*Class:* The class of service provided to passengers has a noticeable impact on satisfaction levels. Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. This observation highlights the importance of offering differentiated services and amenities in various travel classes to meet the diverse preferences and expectations of passengers. It also emphasizes the potential for revenue generation through premium services.
+*Class:* Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. If proven to be statistically significant, this factor could spur class-specific service and amenity adjustments for efficient satisfaction gains. It might also warrant future study detailing meaningful distinctions in the flight experience between classes.
 
 ***
+
+&nbsp;
 
 ## Distribution of continuous variable features by satisfaction - KDE (Kernel Density Estimation)
 
@@ -573,19 +581,22 @@ for (feature in numerical_features) {
 
 ```
 
+&nbsp;
 
 #### Observations
 
 ***
 
-*Age:* The data suggests that middle-aged passengers tend to exhibit higher levels of satisfaction compared to both younger and older age groups. This observation underscores the importance of catering to the specific needs and preferences of passengers in different age categories to enhance overall customer satisfaction.
+*Age:* Middle-aged passengers tend to exhibit higher levels of satisfaction compared to both younger and older age groups, peaking around 40-50 years of age. Meanwhile, the distribution of neutral/dissatisfied passengers peaks noticeably earlier. If age is proven to be a significant factor, this could be utilized to engage in age-targeted improvements.
 
-*Flight Distance:* An interesting trend emerges when considering flight distance in relation to passenger satisfaction. Passengers traveling shorter distances appear to be more inclined towards neutrality or dissatisfaction compared to those embarking on longer journeys. This insight suggests that there might be unique challenges or aspects of shorter flights that influence passenger contentment and warrant further investigation.
+*Flight Distance:* Passengers traveling shorter distances appear to be more inclined towards neutrality or dissatisfaction compared to those embarking on longer journeys. This insight suggests that there might be unique challenges or aspects of shorter flights that influence passenger contentment and warrant further investigation.
 
 *Arrival/Departure Delays:* It is difficult to discern any meaningful differences between passengers that were satisfied or neutral/dissatisfied based on arrival or departure delay durations using this method. To expand upon these visuals—potentially revealing more significant observations—we utilized a scatter plot.
 
 
 ***
+
+&nbsp;
 
 ## Visualizing the relationship between Arrival and Departure delays colored by satisfaction.
 
@@ -604,7 +615,7 @@ ggplot(data_sample, aes(x=Departure.Delay.in.Minutes, y=Arrival.Delay.in.Minutes
 
 ```
 
-This graph also indicates that arrival and departure delays follow a roughly similar linear trajectory, potentially indicating high correlation between these fields.
+This graph also indicates that arrival and departure delays follow a roughly similar linear trajectory, potentially foreshadowing high correlation between these fields.
 
 
 # Multicollinearity Testing
