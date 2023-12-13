@@ -1,0 +1,189 @@
+---
+title: "Decisiontreemodel"
+author: "Parv Bhargava"
+date: "2023-12-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(broom)
+library(tidyverse)
+library(MASS)
+library(ROCR)
+
+```
+
+```{r}
+Train <- read.csv("data\\train.csv")
+Test <- read.csv("data\\test.csv") 
+```
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+#Column datatype Changes - Testing Data - As Columns has ordinal its better to convert into factor 
+
+
+Test$Inflight.wifi.service = as.factor(Test$Inflight.wifi.service)
+Test$Departure.Arrival.time.convenient = as.factor(Test$Departure.Arrival.time.convenient)
+Test$Ease.of.Online.booking = as.factor(Test$Ease.of.Online.booking) 
+Test$Gate.location = as.factor(Test$Gate.location)
+Test$Food.and.drink = as.factor(Test$Food.and.drink)
+Test$Online.boarding = as.factor(Test$Online.boarding)
+Test$Seat.comfort = as.factor(Test$Seat.comfort)
+Test$Inflight.entertainment = as.factor(Test$Inflight.entertainment)
+Test$On.board.service = as.factor(Test$On.board.service)
+Test$Leg.room.service = as.factor(Test$Leg.room.service)
+Test$Baggage.handling = as.factor(Test$Baggage.handling)
+Test$Checkin.service = as.factor(Test$Checkin.service)
+Test$Inflight.service = as.factor(Test$Inflight.service)
+Test$Cleanliness = as.factor(Test$Cleanliness)
+```
+```{r}
+#Column datatype Changes - Training Data - As Columns has ordinal its better to convert into factor
+
+Train$Inflight.wifi.service = as.factor(Train$Inflight.wifi.service)
+Train$Departure.Arrival.time.convenient = as.factor(Train$Departure.Arrival.time.convenient)
+Train$Ease.of.Online.booking = as.factor(Train$Ease.of.Online.booking) 
+Train$Gate.location = as.factor(Train$Gate.location)
+Train$Food.and.drink = as.factor(Train$Food.and.drink)
+Train$Online.boarding = as.factor(Train$Online.boarding)
+Train$Seat.comfort = as.factor(Train$Seat.comfort)
+Train$Inflight.entertainment = as.factor(Train$Inflight.entertainment)
+Train$On.board.service = as.factor(Train$On.board.service)
+Train$Leg.room.service = as.factor(Train$Leg.room.service)
+Train$Baggage.handling = as.factor(Train$Baggage.handling)
+Train$Checkin.service = as.factor(Train$Checkin.service)
+Train$Inflight.service = as.factor(Train$Inflight.service)
+Train$Cleanliness = as.factor(Train$Cleanliness)
+```
+```{r}
+#Replacing NA Values in Training Data - Arrival Delay in Minutes
+NA.position <- which(is.na(Train$Arrival.Delay.in.Minutes))
+Train$Arrival.Delay.in.Minutes[NA.position] = mean(Train$Arrival.Delay.in.Minutes, na.rm = TRUE)
+```
+
+```{r}
+#Replacing NA Values in Testing Data - Arrival Delay in Minutes
+NA.position1 <- which(is.na(Test$Arrival.Delay.in.Minutes))
+Test$Arrival.Delay.in.Minutes[NA.position1] = mean(Test$Arrival.Delay.in.Minutes, na.rm = TRUE)
+```
+
+```{r pressure, echo=FALSE}
+tree = rpart(satisfaction ~ Gender + Customer.Type + Age + 
+               Type.of.Travel + Class + Flight.Distance + Inflight.wifi.service + 
+               Departure.Arrival.time.convenient + Ease.of.Online.booking + 
+               Gate.location + Food.and.drink + Online.boarding + Seat.comfort +
+               Inflight.entertainment + On.board.service + Leg.room.service +
+               Baggage.handling + Checkin.service + Inflight.service +
+               Cleanliness + Departure.Delay.in.Minutes + Arrival.Delay.in.Minutes , 
+             data = Train, method = 'class', minbucket=25)
+```
+
+```{r}
+#Analyzing the Importance of variable using the Variable Importance Plot
+varImp(tree)
+```
+
+```{r}
+#Re-running the model with significant variables
+tree1 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                Ease.of.Online.booking + Online.boarding + Seat.comfort +
+               Inflight.entertainment + On.board.service + Leg.room.service +
+               Baggage.handling + Checkin.service + Inflight.service +
+               Cleanliness + Arrival.Delay.in.Minutes,data = Train, 
+             method = 'class', minbucket=25)
+```
+
+```{r}
+#Visualizaing the Decision tree
+prp(tree1)
+```
+
+
+```{r}
+# Define cross-validation experiment
+numFolds = trainControl( method = "cv", number = 10 )
+cpGrid = expand.grid( .cp = seq(0.01,0.5,0.01))
+```
+
+```{r}
+# Perform the cross validation
+train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
+        Ease.of.Online.booking + Online.boarding + Seat.comfort +
+        Inflight.entertainment + On.board.service + Leg.room.service +
+        Baggage.handling + Checkin.service + Inflight.service +
+        Cleanliness + Arrival.Delay.in.Minutes, 
+      data = Train, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
+```
+
+```{r}
+tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                Inflight.entertainment + On.board.service + Leg.room.service +
+                Baggage.handling + Checkin.service + Inflight.service +
+                Cleanliness + Arrival.Delay.in.Minutes, 
+              data = Train, method="class", cp = 0.01)
+```
+
+```{r}
+#Predicting the Values on the Test data
+PredictROC = predict(tree1, newdata = Test)
+```
+```{r}
+#Plotting the ROC Curve
+pred = prediction(PredictROC[,2], Test$satisfaction)
+perf = performance(pred, "tpr", "fpr")
+plot(perf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1),text.adj = c(-0.2,1.7))
+```
+
+```{r}
+#Confusion Matrix table to find accuracy
+#From the ROC Curve, we found 0.7 is the optimum threshold value for Cut-off.
+table(Test$satisfaction, PredictROC[,2] > 0.7)
+```
+
+```{r}
+#Calculating Accuracy
+Accuracy_avg_Tree = (14003+8484)/(14003+8484+570+2919)
+Accuracy_avg_Tree
+```
+
+
+```{r}
+#Calculating Sensitivity or Recall value
+Recall = (8484)/(8484+2919)
+Recall
+```
+
+```{r}
+#Calculating Precision Value
+Precision = (8484)/(8484+570)
+Precision
+```
+
+```{r}
+#Calculating F-Measure
+F.measure = (2*Recall*Precision)/(Recall+Precision)
+F.measure
+```
+
+```{r}
+#Calculating Specificity
+Specificity = (14003)/(14003+570)
+Specificity
+```
+
+```{r}
+#Testing Data AUC-ROC(Area Under the Curve - Receiver operator Characteristics) value
+AUC = as.numeric(performance(pred, "auc")@y.values)
+AUC
+```
