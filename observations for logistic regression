@@ -8,3 +8,9 @@ Both precision and recall are also high, around 86%.
 Precision indicates that when the model predicts customer satisfaction, it is correct 85.9% of the time.
 Recall tells us that the model successfully identifies 86% of actual satisfied customers. 
 These metrics are particularly important in scenarios where the costs of false positives and false negatives are different.
+
+F-Measure (0.86): The F-Measure, which balances precision and recall, is also 0.86.
+This suggests a good balance between precision and recall in the model, which is crucial for a well-rounded predictive performance.
+
+Specificity (0.894): The specificity is 89.4%, indicating that the model is quite good at identifying true negatives - i.e., 
+it correctly identifies customers who are not satisfied.
