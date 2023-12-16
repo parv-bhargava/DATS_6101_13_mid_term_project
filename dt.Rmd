@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r}
 library(rpart)
 library(rpart.plot)
@@ -25,8 +24,13 @@ library(ROCR)
 Train <- read.csv("data\\train.csv")
 Test <- read.csv("data\\test.csv") 
 ```
-**Column Datatype Changes - Testing Data**: Conversion of certain columns to factors based on their ordinal nature.
+## Including Plots
+
+You can also embed plots, for example:
+
 ```{r}
+#Column datatype Changes - Testing Data - As Columns has ordinal its better to convert into factor 
+
 
 Test$Inflight.wifi.service = as.factor(Test$Inflight.wifi.service)
 Test$Departure.Arrival.time.convenient = as.factor(Test$Departure.Arrival.time.convenient)
@@ -43,7 +47,6 @@ Test$Checkin.service = as.factor(Test$Checkin.service)
 Test$Inflight.service = as.factor(Test$Inflight.service)
 Test$Cleanliness = as.factor(Test$Cleanliness)
 ```
-**Column Datatype Changes - Training Data**: Similar data type conversions for training data.
 ```{r}
 #Column datatype Changes - Training Data - As Columns has ordinal its better to convert into factor
 
@@ -62,13 +65,12 @@ Train$Checkin.service = as.factor(Train$Checkin.service)
 Train$Inflight.service = as.factor(Train$Inflight.service)
 Train$Cleanliness = as.factor(Train$Cleanliness)
 ```
-**Replacing NA Values in Training Data - Arrival Delay in Minutes**: Handling missing values in the training dataset.
 ```{r}
 #Replacing NA Values in Training Data - Arrival Delay in Minutes
 NA.position <- which(is.na(Train$Arrival.Delay.in.Minutes))
 Train$Arrival.Delay.in.Minutes[NA.position] = mean(Train$Arrival.Delay.in.Minutes, na.rm = TRUE)
 ```
-**Replacing NA Values in Testing Data - Arrival Delay in Minutes**: Handling missing values in the testing dataset.
+
 ```{r}
 #Replacing NA Values in Testing Data - Arrival Delay in Minutes
 NA.position1 <- which(is.na(Test$Arrival.Delay.in.Minutes))
@@ -85,12 +87,12 @@ tree = rpart(satisfaction ~ Gender + Customer.Type + Age +
                Cleanliness + Departure.Delay.in.Minutes + Arrival.Delay.in.Minutes , 
              data = Train, method = 'class', minbucket=25)
 ```
-**Analyzing the Importance of Variable Using the Variable Importance Plot**: Analysis to identify significant variables.
+
 ```{r}
 #Analyzing the Importance of variable using the Variable Importance Plot
 varImp(tree)
 ```
-**Re-running the Model with Significant Variables**: Building the model with chosen variables.
+
 ```{r}
 #Re-running the model with significant variables
 tree1 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
@@ -100,18 +102,19 @@ tree1 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.servi
                Cleanliness + Arrival.Delay.in.Minutes,data = Train, 
              method = 'class', minbucket=25)
 ```
-**Visualizing the Decision Tree**: Displaying the structure of the decision tree.
+
 ```{r}
 #Visualizaing the Decision tree
 prp(tree1)
 ```
-**Define Cross-validation Experiment**: Setting up the cross-validation process.
+
+
 ```{r}
 # Define cross-validation experiment
 numFolds = trainControl( method = "cv", number = 10 )
 cpGrid = expand.grid( .cp = seq(0.01,0.5,0.01))
 ```
-**Perform the Cross-validation**: Executing the cross-validation.
+
 ```{r}
 # Perform the cross validation
 train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
@@ -121,7 +124,7 @@ train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service +
         Cleanliness + Arrival.Delay.in.Minutes, 
       data = Train, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
 ```
-**Predicting the Values on the Test Data**: Applying the model to the test data.
+
 ```{r}
 tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
                 Ease.of.Online.booking + Online.boarding + Seat.comfort +
@@ -135,56 +138,52 @@ tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.servi
 #Predicting the Values on the Test data
 PredictROC = predict(tree1, newdata = Test)
 ```
-
-**Plotting the ROC Curve**: Visualizing the Receiver Operating Characteristic curve.
 ```{r}
 #Plotting the ROC Curve
 pred = prediction(PredictROC[,2], Test$satisfaction)
 perf = performance(pred, "tpr", "fpr")
 plot(perf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1),text.adj = c(-0.2,1.7))
 ```
-**Confusion Matrix Table to Find Accuracy**: Evaluating the model's accuracy.
+
 ```{r}
 #Confusion Matrix table to find accuracy
 #From the ROC Curve, we found 0.7 is the optimum threshold value for Cut-off.
 table(Test$satisfaction, PredictROC[,2] > 0.7)
 ```
-**Optimum Threshold Value for Cut-off from ROC Curve**: Determining the best threshold value.
 
-**Calculating Accuracy**: Detailed accuracy calculation.
 ```{r}
 #Calculating Accuracy
 Accuracy_avg_Tree = (14003+8484)/(14003+8484+570+2919)
 Accuracy_avg_Tree
 ```
-**Calculating Sensitivity or Recall Value**: Calculating the recall metric.
+
+
 ```{r}
 #Calculating Sensitivity or Recall value
 Recall = (8484)/(8484+2919)
 Recall
 ```
-**Calculating Precision Value**: Computing the precision of the model.
+
 ```{r}
 #Calculating Precision Value
 Precision = (8484)/(8484+570)
 Precision
 ```
-**Calculating F-Measure**: Determining the F-Measure for model evaluation.
+
 ```{r}
 #Calculating F-Measure
 F.measure = (2*Recall*Precision)/(Recall+Precision)
 F.measure
 ```
-**Calculating Specificity**: Assessing the specificity metric.
+
 ```{r}
 #Calculating Specificity
 Specificity = (14003)/(14003+570)
 Specificity
 ```
-**Testing Data AUC-ROC (Area Under the Curve - Receiver Operator Characteristics)
+
 ```{r}
 #Testing Data AUC-ROC(Area Under the Curve - Receiver operator Characteristics) value
 AUC = as.numeric(performance(pred, "auc")@y.values)
 AUC
 ```
-
