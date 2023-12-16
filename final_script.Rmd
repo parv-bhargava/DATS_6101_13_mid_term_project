@@ -716,6 +716,7 @@ In order to avoid this issue, we elected to combine ratings variables into two g
 |                                       | Cleanliness                           |
 
 
+
 ```{r ratings_combine, echo=FALSE}
 
 # # Select columns for Group1
@@ -838,7 +839,7 @@ data_test$Class <- ifelse(data_test$Class %in% c("Eco", "Eco Plus"), 0,
 
 # Select columns for Group1
 # ratings_group1_test <- select(data_test, Inflight.wifi.service, Departure.Arrival.time.convenient, Ease.of.Online.booking, Gate.location, Online.boarding)  
-ratings_group1_test <- data[, c("Inflight.wifi.service", "Departure.Arrival.time.convenient", 
+ratings_group1_test <- data_test[, c("Inflight.wifi.service", "Departure.Arrival.time.convenient", 
                            "Ease.of.Online.booking", "Gate.location", "Online.boarding")]
 
 
@@ -847,7 +848,7 @@ data_test$Pre_Flight_and_WiFi_Ratings <- rowMeans(ratings_group1_test, na.rm = T
 
 # Select columns for Group2
 # ratings_group2_test <- select(data_test, Food.and.drink, Seat.comfort, Inflight.entertainment, On.board.service, Leg.room.service, Baggage.handling, Checkin.service, Inflight.service, Cleanliness)
-ratings_group2_test <- data[, c("Food.and.drink", "Seat.comfort", "Inflight.entertainment",
+ratings_group2_test <- data_test[, c("Food.and.drink", "Seat.comfort", "Inflight.entertainment",
                            "On.board.service", "Leg.room.service", "Baggage.handling",
                            "Checkin.service", "Inflight.service", "Cleanliness")]
 
