@@ -5,6 +5,8 @@ date: "2023-10-20"
 output: rmdformats::downcute
 ---
 
+
+
 ```{r init, include=FALSE}
 # Load the 'psych' package for various functions related statistics
 library(psych)
@@ -81,8 +83,8 @@ local({
 ```
 
 ```{r data,echo=FALSE}
-data <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\train.csv")
-data_test <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\test.csv")
+data <- read.csv('train.csv')
+data_test <- read.csv('test.csv')
 xkabledplyhead(data, pos = "left", bso = "striped")
 ```
 
@@ -125,6 +127,10 @@ data <- data[!has_zeros, ]
 #Remove NA values which we acquired previously
 data$Arrival.Delay.in.Minutes[is.na(data$Arrival.Delay.in.Minutes)] <- median(data$Arrival.Delay.in.Minutes, na.rm = TRUE)
 missing_data <- data %>%
+  summarise_all(~ sum(is.na(.)))
+
+data_test$Arrival.Delay.in.Minutes[is.na(data_test$Arrival.Delay.in.Minutes)] <- median(data_test$Arrival.Delay.in.Minutes, na.rm = TRUE)
+missing_data <- data_test %>%
   summarise_all(~ sum(is.na(.)))
 ```
 
@@ -185,7 +191,7 @@ coeftest(linear_model, vcov = vcovHC(linear_model, type="HC1"))
 ```
 Based on our linear model, all inputs apart from gender and age have statistically significant impacts on satisfaction likelihood. As mentioned earlier, one major advantage from the linear model is that coefficients can be easily interpreted. For instance, loyal customers display a 0.357 (35.7%) increase in predicted satisfaction probability relative to others. In a similar vein, the model predicts a 43.5% higher satisfaction probability for passengers traveling for business relative to others. For the non-binary aggregated ratings, a 1-point increase corresponds to 9.07% and 22.9% predicted satisfaction probability increases for the pre-flight and in-flight groups respectively.
 
-However, to confirm that the linear model is indeed a practically valuable predictor, we can't rely solely on the dataset used for training; our source provides a second testing dataset for which we can repeat cleaning/encoding steps and apply our model. Since gender and age are not significant, we elected to remove them prior to this step (marking this as a "v2" model). Using a confusion matrix, we determined that the v2 model's "accuracy"—the proportion of correctly predicted satisfaction values out of all respondents—is over 80% for the testing dataset. Based on this information, we can conclude that the linear model is a reasonably good predictor that isn't overfitting the training data. VIF scores for all parameters also fell below 3, which indicates that multicollinearity likely isn't a concern for this model.
+However, to confirm that the linear model is indeed a practically valuable predictor, we can't rely solely on the dataset used for training; our source provides a second testing dataset for which we can repeat cleaning/encoding steps and apply our model. Since gender and age are not significant, we elected to remove them prior to this step (marking this as a "v2" model). Using a confusion matrix, we determined that the v2 model's "accuracy"—the proportion of correctly predicted satisfaction values out of all respondents—is over 80% for the testing dataset. Based on this information, we can conclude that the linear model is a reasonably good predictor that isn't overfitting the training data.
 
 ```{r linear_model_v2, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
@@ -272,14 +278,7 @@ accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(paste("Accuracy:", round(accuracy, 3)))
 
 ```
-```{r}
 
-library(car)
-
-vif_model_linear <- vif(linear_model_v2)
-
-print(vif_model_linear)
-```
 
 However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
 
@@ -507,6 +506,82 @@ print(paste("McFadden R^2:", round(mcFadden,3)))
 
 ```
 
+
+```{r}
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = data)
+
+log_predictions <- predict(log_model, newdata = data_test, type = "response")
+
+summary(log_model)
+```
+
+
+
+```{r}
+# Converting probabilities to binary classification based on a threshold (e.g., 0.5)
+log_pred_class <- ifelse(log_predictions > 0.5, 1, 0)
+
+conf_matrix <- table(data_test$satisfaction, log_pred_class)
+
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+precision <- conf_matrix[2,2] / sum(conf_matrix[2,])
+recall <- conf_matrix[2,2] / sum(conf_matrix[,2])
+f_measure <- 2 * precision * recall / (precision + recall)
+specificity <- conf_matrix[1,1] / sum(conf_matrix[1,])
+
+log_pred_roc <- pROC::roc(data_test$satisfaction, log_predictions)
+auc_value <- pROC::auc(log_pred_roc)
+
+list(accuracy = accuracy, precision = precision, recall = recall, 
+     f_measure = f_measure, specificity = specificity, AUC = auc_value)
+```
+
+
+
+```{r}
+library(pROC)
+plot(log_pred_roc, 
+     main = "ROC Curve for Logistic Regression Model",
+     col = "#1c61b6", 
+     lwd = 2)
+
+auc(log_pred_roc)
+text(0.6, 0.2, paste("AUC =", round(auc(log_pred_roc), 2)), col = "red")
+
+
+```
+
+
+
+```{r}
+
+library(car)
+
+vif_model <- vif(log_model)
+
+print(vif_model)
+```
+
+
+```{r}
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = data)
+
+
+summary(log_model)
+
+
+log_predictions <- predict(log_model, newdata = data_test, type = "response")
+```
 
 
 # Citations
