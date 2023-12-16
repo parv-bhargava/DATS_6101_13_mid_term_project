@@ -1277,11 +1277,10 @@ train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service +
         Inflight.entertainment + On.board.service + Leg.room.service +
         Baggage.handling + Checkin.service + Inflight.service +
         Cleanliness + Arrival.Delay.in.Minutes, 
-      data = data_test, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
+      data = data, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
 ```
 
 - **train() Function**: This function is also from the `caret` package and is used to train the machine learning model. Here, it is used to train a decision tree model (`rpart` method) with the predictors listed.
-- **data = data_test**: This appears to be an error since typically you would use your training dataset to train the model, not your test dataset. You should verify if `data_test` is indeed the correct dataset to use here.
 - **trControl = numFolds**: The cross-validation settings defined earlier are applied here.
 - **tuneGrid = cpGrid**: The function will train the decision tree models using different values of the complexity parameter (`cp`) to find the best performing one.
 
@@ -1299,7 +1298,7 @@ tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.servi
                 Inflight.entertainment + On.board.service + Leg.room.service +
                 Baggage.handling + Checkin.service + Inflight.service +
                 Cleanliness + Arrival.Delay.in.Minutes, 
-              data = data_test, method="class", cp = 0.01)
+              data = data, method="class", cp = 0.01)
 ```
 
 - **rpart() Function**: This function is used to build a decision tree model. The formula inside the function specifies that 'satisfaction' is predicted by various other factors.
