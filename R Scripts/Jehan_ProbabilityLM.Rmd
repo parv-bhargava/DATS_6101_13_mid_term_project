@@ -185,7 +185,7 @@ coeftest(linear_model, vcov = vcovHC(linear_model, type="HC1"))
 ```
 Based on our linear model, all inputs apart from gender and age have statistically significant impacts on satisfaction likelihood. As mentioned earlier, one major advantage from the linear model is that coefficients can be easily interpreted. For instance, loyal customers display a 0.357 (35.7%) increase in predicted satisfaction probability relative to others. In a similar vein, the model predicts a 43.5% higher satisfaction probability for passengers traveling for business relative to others. For the non-binary aggregated ratings, a 1-point increase corresponds to 9.07% and 22.9% predicted satisfaction probability increases for the pre-flight and in-flight groups respectively.
 
-However, to confirm that the linear model is indeed a practically valuable predictor, we can't rely solely on the dataset used for training; our source provides a second testing dataset for which we can repeat cleaning/encoding steps and apply our model. Since gender and age are not significant, we elected to remove them prior to this step (marking this as a "v2" model). Using a confusion matrix, we determined that the v2 model's "accuracy"—the proportion of correctly predicted satisfaction values out of all respondents—is over 80% for the testing dataset. Based on this information, we can conclude that the linear model is a reasonably good predictor that isn't overfitting the training data.
+However, to confirm that the linear model is indeed a practically valuable predictor, we can't rely solely on the dataset used for training; our source provides a second testing dataset for which we can repeat cleaning/encoding steps and apply our model. Since gender and age are not significant, we elected to remove them prior to this step (marking this as a "v2" model). Using a confusion matrix, we determined that the v2 model's "accuracy"—the proportion of correctly predicted satisfaction values out of all respondents—is over 80% for the testing dataset. Based on this information, we can conclude that the linear model is a reasonably good predictor that isn't overfitting the training data. VIF scores for all parameters also fell below 3, which indicates that multicollinearity likely isn't a concern for this model.
 
 ```{r linear_model_v2, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
@@ -272,7 +272,14 @@ accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(paste("Accuracy:", round(accuracy, 3)))
 
 ```
+```{r}
 
+library(car)
+
+vif_model_linear <- vif(linear_model_v2)
+
+print(vif_model_linear)
+```
 
 However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
 
