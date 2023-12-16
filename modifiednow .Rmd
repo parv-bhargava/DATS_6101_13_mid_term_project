@@ -1,0 +1,603 @@
+---
+title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
+author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
+date: "2023-10-20"
+output: rmdformats::downcute
+---
+
+
+
+```{r init, include=FALSE}
+# Load the 'psych' package for various functions related statistics
+library(psych)
+
+# Load the 'readr' package for efficient reading of data files
+library(readr)
+
+# Load the 'forcats' package for handling categorical variables
+library(forcats)
+
+# Load the 'gridExtra' package for arranging multiple plots on a grid
+library(gridExtra)
+
+# Load the 'RColorBrewer' package for color palettes
+library(RColorBrewer)
+
+# Load the 'usdm' package for data mining and analysis
+library(usdm)
+
+# Load the 'ezids' package
+library(ezids)
+
+# Load the 'Hmisc' package for various functions, including 'describe'
+library(Hmisc)
+
+# Load the 'ggplot2' package for creating data visualizations using the Grammar of Graphics
+library(ggplot2)
+
+# Load the 'dplyr' package for data manipulation and transformation
+library(dplyr)
+
+# Load the 'car' package for functions related to regression diagnostics, including VIF
+library(car)
+
+# Load the 'corrplot' package for visualizing correlation matrices
+library(corrplot)
+
+# Load the 'kableExtra' package for advanced table formatting with 'kable'
+library(kableExtra)
+
+# Load the 'knitr' package for dynamic report generation
+library(knitr)
+
+# Load the 'lmtest' and 'sandwich' packages to help with linear model testing
+library(lmtest)
+
+library(sandwich)
+
+```
+
+```{r setup, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, message = F)
+# knitr::opts_chunk$set(include = F)
+# knitr::opts_chunk$set(echo = TRUE)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+```
+
+```{r scrollbar_verticle, include=FALSE}
+options(width = 60)
+local({
+  hook_output <- knitr::knit_hooks$get('output')
+  knitr::knit_hooks$set(output = function(x, options) {
+    if (!is.null(options$max.height)) options$attr.output <- c(
+      options$attr.output,
+      sprintf('style="max-height: %s;"', options$max.height)
+    )
+    hook_output(x, options)
+  })
+})
+```
+
+```{r data,echo=FALSE}
+data <- read.csv('train.csv')
+data_test <- read.csv('test.csv')
+xkabledplyhead(data, pos = "left", bso = "striped")
+```
+
+# Prior Code (kept for easier re-integration)
+
+#### **Duplicate values**
+```{r data_preprocessing_obs, echo=FALSE}
+# Check for missing values
+missing_data <- data %>%
+  summarise_all(~ sum(is.na(.)))
+
+# Check for duplicated rows
+duplicate_rows <- data %>%
+  summarise(n_duplicates = sum(duplicated(.)))
+```
+
+```{r result_missing,echo=FALSE}
+xkabledply(missing_data , title = "Missing Values — Initial",
+  pos = "left",
+  bso = "striped")
+```
+
+
+```{r data preprocessing, echo=FALSE}
+# Get unnecessary columns
+drop <- c("X","id")
+# Drop column names specified in vector
+data <- data[,!(names(data) %in% drop)]
+
+#Select ratings columns
+selected_columns <- 7:20
+
+# Check if any ratings include zeros (representing N/A)
+has_zeros <- apply(data[selected_columns], 1, function(row) any(row == 0))
+
+# Remove rows with zeros in the selected columns
+data <- data[!has_zeros, ]
+
+
+#Remove NA values which we acquired previously
+data$Arrival.Delay.in.Minutes[is.na(data$Arrival.Delay.in.Minutes)] <- median(data$Arrival.Delay.in.Minutes, na.rm = TRUE)
+missing_data <- data %>%
+  summarise_all(~ sum(is.na(.)))
+
+data_test$Arrival.Delay.in.Minutes[is.na(data_test$Arrival.Delay.in.Minutes)] <- median(data_test$Arrival.Delay.in.Minutes, na.rm = TRUE)
+missing_data <- data_test %>%
+  summarise_all(~ sum(is.na(.)))
+```
+
+
+```{r ratings_combine, echo=FALSE}
+
+# Select columns for Group1
+ratings_group1 <- select(data, Inflight.wifi.service, Departure.Arrival.time.convenient, Ease.of.Online.booking, Gate.location, Online.boarding)  
+
+# Calculate the average for Group1
+data$Pre_Flight_and_WiFi_Ratings <- rowMeans(ratings_group1, na.rm = TRUE)
+
+# Select columns for Group2
+ratings_group2 <- select(data, Food.and.drink, Seat.comfort, Inflight.entertainment, On.board.service, Leg.room.service, Baggage.handling, Checkin.service, Inflight.service, Cleanliness)
+
+# Calculate the average for Group2
+data$In_Flight_and_Baggage_Ratings <- rowMeans(ratings_group2, na.rm = TRUE)
+
+data_ratings_combined <- data[c("Pre_Flight_and_WiFi_Ratings","In_Flight_and_Baggage_Ratings")]
+
+summary(data_ratings_combined)
+
+
+```
+
+
+# Probability and standard OLS estimates
+
+
+Before engaging in further analysis, we first identified that satisfaction—as a categorical/binary variable—runs into a fundamental interpretation issue under a standard linear model, where **the standard linear model is not bounded between 0 and 1 in the same manner as our satisfaction variable**. Under certain inputs, the linear model predicts unattainable values between satisfied or neutral/dissatisfied (encoded as 1 and 0 respectively), and key assumptions of linearity and homoskedasticity are violated. 
+
+Despite this restriction, linear probability models remain in widespread use, particularly among social scientists, making this a potentially fruitful avenue for a predictive model (Allison, 2015). This largely stems from ease of interpretation and generation; unlike logit (to be discussed later), this directly predicts changes in probability rather than odds ratios, is easier to run, and approximates logit for the 0.2-0.8 probability range in most cases (Allison, 2020). We generated a linear model and used a t-test with robust standard errors to account for violated homoskedasticity assumptions.
+
+```{r encoding, echo=FALSE}
+# Encode the satisfaction variable as 1/0 to use temporarily for JB analysis section, should be removed since this will be closer to the start in the full script
+
+data$satisfaction <- ifelse(data$satisfaction == "satisfied", 1, 0)
+
+data$Gender <- ifelse(data$Gender == "Male", 1, 0)
+
+data$Customer.Type <- ifelse(data$Customer.Type == "Loyal Customer", 1, 0)
+
+data$Type.of.Travel <- ifelse(data$Type.of.Travel == "Business travel", 1, 0)
+
+data$Class <- ifelse(data$Class %in% c("Eco", "Eco Plus"), 0, 
+                     ifelse(data$Class == "Business", 1, NA))
+
+```
+
+```{r linear_model_creation, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+linear_model <- lm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data)
+
+summary(linear_model)
+
+coeftest(linear_model, vcov = vcovHC(linear_model, type="HC1"))
+
+
+```
+Based on our linear model, all inputs apart from gender and age have statistically significant impacts on satisfaction likelihood. As mentioned earlier, one major advantage from the linear model is that coefficients can be easily interpreted. For instance, loyal customers display a 0.357 (35.7%) increase in predicted satisfaction probability relative to others. In a similar vein, the model predicts a 43.5% higher satisfaction probability for passengers traveling for business relative to others. For the non-binary aggregated ratings, a 1-point increase corresponds to 9.07% and 22.9% predicted satisfaction probability increases for the pre-flight and in-flight groups respectively.
+
+However, to confirm that the linear model is indeed a practically valuable predictor, we can't rely solely on the dataset used for training; our source provides a second testing dataset for which we can repeat cleaning/encoding steps and apply our model. Since gender and age are not significant, we elected to remove them prior to this step (marking this as a "v2" model). Using a confusion matrix, we determined that the v2 model's "accuracy"—the proportion of correctly predicted satisfaction values out of all respondents—is over 80% for the testing dataset. Based on this information, we can conclude that the linear model is a reasonably good predictor that isn't overfitting the training data.
+
+```{r linear_model_v2, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+
+linear_model_v2 <- lm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data)
+
+summary(linear_model_v2)
+
+```
+
+```{r data_test_cleaning}
+
+# Check for missing values
+missing_data <- data_test %>%
+  summarise_all(~ sum(is.na(.)))
+
+# Check for duplicated rows
+duplicate_rows <- data_test %>%
+  summarise(n_duplicates = sum(duplicated(.)))
+
+# Get unnecessary columns
+drop <- c("X","id")
+# Drop column names specified in vector
+data_test <- data_test[,!(names(data_test) %in% drop)]
+
+# Select ratings columns
+selected_columns <- 7:20
+
+# Check if any ratings include zeros (representing N/A)
+has_zeros <- apply(data_test[selected_columns], 1, function(row) any(row == 0))
+
+# Remove rows with zeros in the selected columns
+data_test <- data_test[!has_zeros, ]
+
+
+# Remove NA values which we acquired previously
+data_test$Arrival.Delay.in.Minutes[is.na(data_test$Arrival.Delay.in.Minutes)] <- median(data_test$Arrival.Delay.in.Minutes, na.rm = TRUE)
+missing_data <- data_test %>%
+  summarise_all(~ sum(is.na(.)))
+
+# Repeat encoding steps
+
+data_test$satisfaction <- ifelse(data_test$satisfaction == "satisfied", 1, 0)
+
+data_test$Gender <- ifelse(data_test$Gender == "Male", 1, 0)
+
+data_test$Customer.Type <- ifelse(data_test$Customer.Type == "Loyal Customer", 1, 0)
+
+data_test$Type.of.Travel <- ifelse(data_test$Type.of.Travel == "Business travel", 1, 0)
+
+data_test$Class <- ifelse(data_test$Class %in% c("Eco", "Eco Plus"), 0, 
+                     ifelse(data_test$Class == "Business", 1, NA))
+
+
+# Repeat ratings aggregation steps
+
+# Select columns for Group1
+ratings_group1_test <- select(data_test, Inflight.wifi.service, Departure.Arrival.time.convenient, Ease.of.Online.booking, Gate.location, Online.boarding)  
+
+# Calculate the average for Group1
+data_test$Pre_Flight_and_WiFi_Ratings <- rowMeans(ratings_group1_test, na.rm = TRUE)
+
+# Select columns for Group2
+ratings_group2_test <- select(data_test, Food.and.drink, Seat.comfort, Inflight.entertainment, On.board.service, Leg.room.service, Baggage.handling, Checkin.service, Inflight.service, Cleanliness)
+
+# Calculate the average for Group2
+data_test$In_Flight_and_Baggage_Ratings <- rowMeans(ratings_group2_test, na.rm = TRUE)
+
+data_ratings_combined_test <- data_test[c("Pre_Flight_and_WiFi_Ratings","In_Flight_and_Baggage_Ratings")]
+
+
+```
+
+```{r linear_model_v2_test}
+
+data_test$predicted_probabilities_linear <- predict(linear_model_v2, newdata = data_test)
+
+data_test$predicted_outcome_linear <- ifelse(data_test$predicted_probabilities_linear > 0.5, 1, 0)
+
+confusion_matrix <- table(data_test$satisfaction, data_test$predicted_outcome_linear)
+
+print(confusion_matrix)
+
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Accuracy:", round(accuracy, 3)))
+
+```
+
+
+However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
+
+Unlike a standard linear regression, which assumes that independent parameters have a linear relationship with the dependent variable, **logistic regression assumes that parameters have a linear relationship with the log odds** ("Assumptions of Logistic Regression", n.d.).
+
+Odds represent the number of favorable outcomes divided by the number of unfavorable outcomes. Put differently, if "p" represents the probability of favorable outcomes, Odds = **p/(1-p)**. Log odds take the natural log of the odds, which can be expressed as **ln(p/1-p))** (Agarwal, 2019). We used visual test to examine whether or not this assumption holds true for continuous variables. While it is not sensible to compute log odds for individual data points, we grouped continuous variables into discrete buckets—calculating the average log odds for each—to examine whether or not they might satisfy this assumption.
+
+Only flight distance, as well as in-flight and baggage ratings, displayed roughly linear relationships with log odds of satisfaction in our testing. Age appeared to have a parabolic relationship, peaking in the middle, indicating some sort of aggressive transformation method may be necessary to reach a linear relationship. Meanwhile, log odds for both delay statistics quickly dispersed in both directions as they increase (likely in part due to the limited frequency of higher durations), making it difficult to conclude with certainty that a linear relationship exists. Pre-flight and wi-fi ratings appear to have a significantly looser connection relative to in-flight ratings with a potential dip in log odds for average ratings.
+
+
+# Testing Linearity with log odds
+
+```{r discrete, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+
+# Calculate the discrete buckets for each variable
+age_breaks <- seq(0, 90, by = 2)
+dist_breaks <- seq(0, 5000, by = 20)
+delay_breaks <- seq(0, 1750, by = 10)
+rating_breaks <- seq(0,5,by=0.1)
+
+# Use cut() to create breaks
+data$AgeCategory <- cut(data$Age, breaks = age_breaks)
+data$DistCategory <- cut(data$Flight.Distance, breaks = dist_breaks)
+data$DepDelayCategory<- cut(data$Departure.Delay.in.Minutes, breaks = delay_breaks)
+data$ArrDelayCategory<- cut(data$Arrival.Delay.in.Minutes, breaks = delay_breaks)
+data$PreFlightCategory<-cut(data$Pre_Flight_and_WiFi_Ratings, breaks = rating_breaks)
+data$InFlightCategory<-cut(data$In_Flight_and_Baggage_Ratings, breaks = rating_breaks)
+```
+
+
+```{r log_odds, echo=FALSE}
+
+# Define a function to calculate the log odds for a given x value, to use with aggregate()
+
+log_odds_calc <- function(x) {
+  avg <- mean(x)
+  log_odds <- log(avg / (1 - avg))
+  return(log_odds)
+}
+
+# Use aggregate with the log odds function for each continuous variable of interest (with their discrete grouping)
+log_odds_Age <- aggregate(satisfaction ~ AgeCategory, data, log_odds_calc)
+log_odds_Dist <- aggregate(satisfaction ~ DistCategory, data, log_odds_calc)
+log_odds_DepDelay <- aggregate(satisfaction ~ DepDelayCategory, data, log_odds_calc)
+log_odds_ArrDelay <- aggregate(satisfaction ~ ArrDelayCategory, data, log_odds_calc)
+
+log_odds_PreFlight <- aggregate(satisfaction ~ PreFlightCategory, data, log_odds_calc)
+log_odds_InFlight <- aggregate(satisfaction ~ InFlightCategory, data, log_odds_calc)
+
+```
+
+
+
+```{r log_odds_cont_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+
+# Create scatter plots for "original" continuous variables
+
+ggplot(log_odds_Age, aes(x = AgeCategory, y = satisfaction)) +
+  geom_point(size=6, color="turquoise") +
+  labs(
+    x = "\nAge",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by Age\n"
+  ) + 
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )  
+
+
+ggplot(log_odds_Dist, aes(x = DistCategory, y = satisfaction)) +
+  geom_point(size=6, color="blue") +
+  labs(
+    x = "\nDistance",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by Distance\n"
+  ) +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )
+
+
+ggplot(log_odds_DepDelay, aes(x = DepDelayCategory, y = satisfaction)) +
+  geom_point(size=6, color="purple") +
+  labs(
+    x = "\nDeparture Delay",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by Departure Delay\n"
+  ) + 
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )
+
+
+ggplot(log_odds_ArrDelay, aes(x = ArrDelayCategory, y = satisfaction)) +
+  geom_point(size=6, color="pink") +
+  labs(
+    x = "\nArrival Delay",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by Arrival Delay\n"
+  ) +
+  
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  ) 
+
+``` 
+
+
+
+
+
+
+```{r log_odds_ratings_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
+
+# Create scatter plots for aggregate ratings variables
+
+ggplot(log_odds_PreFlight, aes(x = PreFlightCategory, y = satisfaction)) +
+  geom_point(size=6, color="red") +
+  labs(
+    x = "\nPre-Flight & Wifi Satisfaction Rating",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by Pre-Flight & Wifi Ratings\n"
+  ) + 
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )  
+
+ggplot(log_odds_InFlight, aes(x = InFlightCategory, y = satisfaction)) +
+  geom_point(size=6, color="orange") +
+  labs(
+    x = "\nIn-Flight & Baggage Satisfaction Rating",
+    y = "Log Odds\n",
+    title = "\n\n\nLog Odds by In-Flight and Baggage Ratings\n"
+  ) + 
+  theme(
+    panel.background = element_rect(fill = "white"),
+    axis.text.x = element_blank(),
+    axis.text = element_text(size = 20),     # Adjust the size of text elements
+    axis.title = element_text(size = 20, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"), 
+    legend.text = element_text(size = 20),    
+    legend.key.size = unit(2, "lines"),
+    plot.title = element_text(size = 32, face = "bold")
+  )  
+
+
+```
+
+
+Following visual testing, we generated a logit model in order to examine potential differences relative to the prior linear model. Rather than starting with a pared-down variable list, we returned to an expanded variable list to see if there were any distinctions in what the models deemed statistically significant. This proved to be informative; alongside gender and age, flight distance also failed to reach the threshold for statistical significance.
+
+
+```{r logit_model}
+
+logit_model = glm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data, family = "binomial")
+
+summary(logit_model)
+```
+
+In order to compare this with the linear model, we generated another confusion matrix based on the testing data. In a similar fashion to the linear model, we created a "v2" model removing statistically insignificant inputs. The accuracy results were better than those of the linear model, but only slightly; it isn't clear whether this marginal improvement would hold true given further testing with different survey data. The calculated McFadden pseudo-R^2 falls above 0.5.
+
+
+
+```{r logit_model_v2}
+
+logit_model_v2 = glm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data, family = "binomial")
+
+summary(logit_model_v2)
+```
+
+
+```{r logit_model_v2_test}
+
+data_test$predicted_probabilities_logit <- predict(logit_model_v2, newdata = data_test)
+
+data_test$predicted_outcome_logit <- ifelse(data_test$predicted_probabilities_logit > 0.5, 1, 0)
+
+confusion_matrix <- table(data_test$satisfaction, data_test$predicted_outcome_logit)
+
+print(confusion_matrix)
+
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Accuracy:", round(accuracy, 3)))
+
+logit_model_null <- glm(satisfaction ~ 1, data = data, family = "binomial")
+
+mcFadden <- 1 - logLik(logit_model_v2)/logLik(logit_model_null)
+
+print(paste("McFadden R^2:", round(mcFadden,3)))
+
+```
+
+
+```{r}
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = data)
+
+log_predictions <- predict(log_model, newdata = data_test, type = "response")
+
+summary(log_model)
+```
+
+
+
+```{r}
+# Converting probabilities to binary classification based on a threshold (e.g., 0.5)
+log_pred_class <- ifelse(log_predictions > 0.5, 1, 0)
+
+conf_matrix <- table(data_test$satisfaction, log_pred_class)
+
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+precision <- conf_matrix[2,2] / sum(conf_matrix[2,])
+recall <- conf_matrix[2,2] / sum(conf_matrix[,2])
+f_measure <- 2 * precision * recall / (precision + recall)
+specificity <- conf_matrix[1,1] / sum(conf_matrix[1,])
+
+log_pred_roc <- pROC::roc(data_test$satisfaction, log_predictions)
+auc_value <- pROC::auc(log_pred_roc)
+
+list(accuracy = accuracy, precision = precision, recall = recall, 
+     f_measure = f_measure, specificity = specificity, AUC = auc_value)
+```
+
+
+
+```{r}
+library(pROC)
+plot(log_pred_roc, 
+     main = "ROC Curve for Logistic Regression Model",
+     col = "#1c61b6", 
+     lwd = 2)
+
+auc(log_pred_roc)
+text(0.6, 0.2, paste("AUC =", round(auc(log_pred_roc), 2)), col = "red")
+
+
+```
+
+
+
+```{r}
+
+library(car)
+
+vif_model <- vif(log_model)
+
+print(vif_model)
+```
+
+
+```{r}
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = data)
+
+
+summary(log_model)
+
+
+log_predictions <- predict(log_model, newdata = data_test, type = "response")
+```
+
+
+# Citations
+
+Klein, TJ (2020). *Airline Passenger Satisfaction*. Kaggle. https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv
+
+Lutz, A., & Lubin, G. (2012). *Airlines Have An Insanely Small Profit Margin*. Business Insider. https://www.businessinsider.com/airlines-have-a-small-profit-margin-2012-6
+
+Hardee, H. (2023). *Frontier reports lacklustre Q3 results as it struggles in ‘over-saturated’ core markets*. FlightGlobal. https://www.flightglobal.com/strategy/frontier-reports-lacklustre-q3-results-as-it-struggles-in-over-saturated-core-markets/155561.article
+
+*vif: Variance Inflation Factors*. (n.d.). R Package Documentation. https://rdrr.io/cran/car/man/vif.html
+
+Allison, P. (2015, April 1). *What’s So Special About Logit?*. Statistical Horizons. https://statisticalhorizons.com/whats-so-special-about-logit/
+
+Allison, P. (2020, April 24). *Better Predicted Probabilities from Linear Probability Models*. Statistical Horizons. https://statisticalhorizons.com/better-predicted-probabilities/
+
+*Assumptions of Logistic Regression*. (n.d.). Statistics Solutions. https://www.statisticssolutions.com/free-resources/directory-of-statistical-analyses/assumptions-of-logistic-regression/
+
+Agarwal, P. (2019, July 8). *WHAT and WHY of Log Odds*. Towards Data Science. https://towardsdatascience.com/https-towardsdatascience-com-what-and-why-of-log-odds-64ba988bf704
