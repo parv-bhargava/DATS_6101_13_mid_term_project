@@ -1011,10 +1011,6 @@ ggplot(log_odds_ArrDelay, aes(x = ArrDelayCategory, y = satisfaction)) +
 ``` 
 
 
-
-
-
-
 ```{r log_odds_ratings_visual, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
 # Create scatter plots for aggregate ratings variables
@@ -1374,3 +1370,66 @@ AUC = as.numeric(performance(pred, "auc")@y.values)
 AUC
 ```
 
+
+# Random Forest Model
+
+
+```{r}
+library(pROC)
+library(randomForest)
+
+rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                           Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                           Inflight.entertainment + On.board.service + Leg.room.service +
+                           Baggage.handling + Checkin.service + Inflight.service +
+                           Cleanliness + Arrival.Delay.in.Minutes, 
+                         data = data, 
+                         ntree = 2,
+                         importance = TRUE)
+
+rf_predictions <- predict(rf_model, newdata = data_test)
+
+conf_matrix_rf <- table(data_test$satisfaction, rf_predictions)
+
+accuracy_rf <- sum(diag(conf_matrix_rf)) / sum(conf_matrix_rf)
+precision_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[2,])
+recall_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[,2])
+f_measure_rf <- 2 * precision_rf * recall_rf / (precision_rf + recall_rf)
+specificity_rf <- conf_matrix_rf[1,1] / sum(conf_matrix_rf[1,])
+
+rf_pred_roc <- pROC::roc(as.numeric(data_test$satisfaction), as.numeric(rf_predictions))
+auc_value_rf <- pROC::auc(rf_pred_roc)
+
+list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf, 
+     f_measure = f_measure_rf, specificity = specificity_rf, AUC = auc_value_rf)
+
+```
+
+## Observations: 
+
+
+# Conclusion
+
+1. 
+
+2. 
+
+3. 
+
+4. 
+
+# Citations
+
+Klein, TJ (2020). *Airline Passenger Satisfaction*. Kaggle. https://www.kaggle.com/datasets/teejmahal20/airline-passenger-satisfaction?select=train.csv
+
+Lutz, A., & Lubin, G. (2012). *Airlines Have An Insanely Small Profit Margin*. Business Insider. https://www.businessinsider.com/airlines-have-a-small-profit-margin-2012-6
+
+Hardee, H. (2023). *Frontier reports lacklustre Q3 results as it struggles in ‘over-saturated’ core markets*. FlightGlobal. https://www.flightglobal.com/strategy/frontier-reports-lacklustre-q3-results-as-it-struggles-in-over-saturated-core-markets/155561.article
+
+*vif: Variance Inflation Factors*. (n.d.). R Package Documentation. https://rdrr.io/cran/car/man/vif.html
+
+Allison, P. (2015, April 1). *What’s So Special About Logit?*. Statistical Horizons. https://statisticalhorizons.com/whats-so-special-about-logit/
+
+*Assumptions of Logistic Regression*. (n.d.). Statistics Solutions. https://www.statisticssolutions.com/free-resources/directory-of-statistical-analyses/assumptions-of-logistic-regression/
+
+Agarwal, P. (2019, July 8). *WHAT and WHY of Log Odds*. Towards Data Science. https://towardsdatascience.com/https-towardsdatascience-com-what-and-why-of-log-odds-64ba988bf704
