@@ -1,3 +1,9 @@
 Model Accuracy (0.879): 
 The accuracy is quite high, at 87.9%. This means that the model correctly predicts whether a customer is satisfied or not in approximately 88 out of 100 cases. 
 It's a good indicator of overall performance, but it's important to consider other metrics as well, especially if the data set is imbalanced.
+
+Precision (0.859) and Recall (0.86):
+Both precision and recall are also high, around 86%.
+Precision indicates that when the model predicts customer satisfaction, it is correct 85.9% of the time. 
+Recall tells us that the model successfully identifies 86% of actual satisfied customers.
+These metrics are particularly important in scenarios where the costs of false positives and false negatives are different.
