@@ -1,7 +1,7 @@
 ---
 title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
 author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
-date: "2023-10-20"
+date: "2023-12-16"
 output: rmdformats::downcute
 ---
 
@@ -324,7 +324,7 @@ if (length(rating_plots) > 0) {
 
 We also used plots to visually discern differences in continuous variables between satisfied and unsatisfied groups, potentially revealing significant model inputs. The first step was to use box-plots for continuous variables. We found that older passengers tend to be more satisfied with their flights compared to their younger counterparts. Also, on average, passengers who embark on longer journeys tend to report higher levels of satisfaction. The basis for this trend is unclear at this time, but further investigation may yield actionable conclusions in this regard. Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers, which supports the intuition that prolonged delays before takeoff may negatively affect passenger contentment. Similarly to departure delays, flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the potential impact of delays—both at departure and arrival—on passenger satisfaction, although more investigation was required to uncover the exact nature of this relationship. A scatterplot uncovered potential multicollinearity concerns to be addressed later.
 
-Histograms for categorical variables uncovered A distinct trend emerges in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. There is a significant satisfaction discrepancy between individuals traveling for business and personal reasons; a majority of business travelers were satisfied, while an overwhelming proportion of personal travelers expressed dissatisfaction or neutrality. The nature of this relationship, as well as actionable insights that may be drawn from it, are unclear at this point. Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. If proven to be statistically significant, this factor could spur class-specific service and amenity adjustments for efficient satisfaction gains. It might also warrant future study detailing meaningful distinctions in the flight experience between classes. The notable exception here is gender, across which there were no notable differences in satisfaction. 
+Histograms for categorical variables uncovered a distinct trend in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. There is a significant satisfaction discrepancy between individuals traveling for business and personal reasons; a majority of business travelers were satisfied, while an overwhelming proportion of personal travelers expressed dissatisfaction or neutrality. The nature of this relationship, as well as actionable insights that may be drawn from it, are unclear at this point. Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. If proven to be statistically significant, this factor could spur class-specific service and amenity adjustments for efficient satisfaction gains. It might also warrant future study detailing meaningful distinctions in the flight experience between classes. The notable exception here is gender, across which there were no notable differences in satisfaction. 
 
 
 #### Continuous variable boxplots
@@ -627,7 +627,7 @@ accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 
 ```
 
-- **Accuracy**: `r accuracy` 
+- **Accuracy**: `r accuracy`
 
 However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
 
@@ -1144,11 +1144,9 @@ AUC = as.numeric(performance(pred, "auc")@y.values)
 
 # Conclusion
 
-Based on accuracy metrics, we can see that multiple models are reasonably good predictors of customer satisfaction. We have been able to limit multicollinearity through multicollinearity testing and avoid overfitting through testing/training data splits. In addition, model parameters include multiple different variable levels. This fulfills our initial research question.
+Based on accuracy metrics, we can see that multiple models are reasonably good predictors of customer satisfaction. We have been able to limit multicollinearity through correlation matrices and VIF testing and avoid overfitting through testing/training data splits. In addition, model parameters include multiple different variable levels. This fulfills our initial research question.
 
 While predictive validity varies, there is also an interpretation tradeoff relative to other models; in the linear model, for example, the parameters can be intuitively tied to changes in probability for each unit of an independent variable. Alternatively, the decision tree model and discussions of feature importance can yield different results. This is especially important in the context of practical outcomes; if we were to present such results to an airline executive, different models might provide different amounts of actionable information concerning inputs.
-
-
 
 # Citations
 
