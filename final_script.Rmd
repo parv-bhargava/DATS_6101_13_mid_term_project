@@ -1,7 +1,7 @@
 ---
 title: "An Exploratory Data Analysis on Airline Customer Satisfaction"
 author: "Parv Bhargava, Jehan Bugli, Venkata Madisetty, and Namratha Prakash"
-date: "2023-10-20"
+date: "2023-12-16"
 output: rmdformats::downcute
 ---
 
@@ -95,141 +95,36 @@ local({
 
 # Introduction
 
-Airline passenger satisfaction is a crucial metric for firms in the airline industry. Understanding the factors that contribute to customer satisfaction is essential for airlines to improve their services and compete effectively; high market saturation, as well as low profit margins, can magnify the effects of small advantages or disadvantages relative to other firms (Lutz et al., 2012; Hardee, 2023). In this research, we will analyze various factors that affect airline passenger satisfaction — provided through a survey dataset — and, ultimately, judge their suitability for a regression model predicting passenger satisfaction.
+Airline passenger satisfaction is a crucial metric for firms in the airline industry. Understanding the factors that contribute to customer satisfaction is essential for airlines to improve their services and compete effectively; high market saturation, as well as low profit margins, can magnify the effects of small advantages or disadvantages relative to other firms (Lutz et al., 2012; Hardee, 2023). In this research, we will analyze various factors that affect airline passenger satisfaction and, ultimately, judge their suitability for a regression model predicting passenger satisfaction. We will leverage a Kaggle dataset that includes surveyed passenger characteristics, flight details, and satisfaction ratings for select pre-flight and in-flight components (Klein, 2020). To ensure modeling suitability, we will conduct exploratory data analysis, taking into account variable distributions and types. 
 
-## Research Proposal
+With our research, we aim to answer a few main questions. For one, **to what extent do certain surveyed passenger characteristics and flight experience components impact the likelihood that a passenger will be satisfied – rather than neutral or dissatisfied – with their trip?** This is the key focus of our research; we want to identify meaningful inputs for satisfaction and estimate the magnitude of their effects. Secondly, **how can we model the likelihood of passenger satisfaction using surveyed passenger characteristics and flight experience components in a manner that minimizes predictive bias?** While assembling our models, we need to ensure that issues such as multicollinearity and overfitting do not jeopardize our models' predictive validity. Finally, **to what extent can we predict the likelihood that a flight passenger will be satisfied with their experience using multiple different variable levels?** Our dataset utilizes continuous, ordinal, and categorical variables, all of which can require differing assumptions when used in modeling; incorporating these different variable levels into a model is an important step in predicting satisfaction.
 
-Our research will first look at individual variables in the aforementioned survey dataset to examine distributions and other characteristics. Then, we will identify a regression model that may be congruent with our dataset and test assumptions associated with the model. 
-
-We will leverage a Kaggle dataset that includes surveyed passenger characteristics, flight details, and satisfaction ratings for select pre-flight and in-flight components (Klein, 2020). To ensure modeling suitability, we will conduct exploratory data analysis, taking into account variable distributions and types. 
-
-### SMART Questions
-With our research, we aim to make progress towards answering the following questions:
-
-1. **To what extent do certain surveyed passenger characteristics and flight experience components impact the likelihood that a passenger will be satisfied – rather than neutral or dissatisfied – with their trip?**
-
-2. **How can we model the likelihood of passenger satisfaction using surveyed passenger characteristics and flight experience components in a manner that minimizes predictive bias?**
-
-3. **To what extent can we predict the likelihood that a flight passenger will be satisfied with their experience using multiple different variable levels?**
-
-### Objective
-
-This research offers an opportunity to assess the limitations of linear regression models in predicting passenger satisfaction, specifically with regards to the categorical nature of the output in this dataset. Through exploratory data analysis (EDA), we can identify the characteristics of our data and subsequently illustrate why a linear regression model may not be suitable for this analysis. This will lay the groundwork for our future research on logistic regression.
-
-In summary, our research will provide insights into the intricate relationship between passenger characteristics, flight experience, and satisfaction levels. We will also explore the limitations of linear regression models and prepare the foundation for a more advanced logistic regression approach in future analysis.
-
-### Dataset Variables
-
-The dataset for our research on airline passenger satisfaction contains various variables, which can be categorized into three types: continuous, categorical, and ordinal. In this section, we'll list and briefly explain each of these variables.
-
-#### Continuous Variables
-
-1. **Age**: This variable represents the actual age of the passengers.
-
-2. **Flight Distance**: Flight distance is the distance covered during the journey, measured in miles.
-
-3. **Departure Delay in Minutes**: This variable indicates the number of minutes by which a flight was delayed during departure.
-
-4. **Arrival Delay in Minutes**: Similarly, this variable represents the number of minutes by which a flight was delayed during arrival.
-
-#### Categorical Variables
-
-1. **Gender**: Gender is a categorical variable indicating the gender of the passengers.
-
-2. **Customer Type**: The "Customer Type" variable categorizes passengers based on their customer loyalty.
-
-3. **Type of Travel**: This variable categorizes the purpose of the flight.
-
-4. **Class**: "Class" indicates the travel class in the plane.
-
-### Ordinal Variables
-
-The following variables represent satisfaction levels, which are ordinal in nature, with values ranging from 0 to 5. According to the documentation, 0 is used to encode "Not Applicable" values.
-
-1. **Inflight Wifi Service**: Satisfaction level of the inflight wifi service.
-
-2. **Departure/Arrival Time Convenient**: Satisfaction level of departure/arrival time convenience.
-
-3. **Ease of Online Booking**: Satisfaction level of online booking.
-
-4. **Gate Location**: Satisfaction level of gate location.
-
-5. **Food and Drink**: Satisfaction level of food and drink.
-
-6. **Online Boarding**: Satisfaction level of online boarding.
-
-7. **Seat Comfort**: Satisfaction level of seat comfort.
-
-8. **Inflight Entertainment**: Satisfaction level of inflight entertainment.
-
-9. **On-board Service**: Satisfaction level of on-board service.
-
-10. **Leg Room Service**: Satisfaction level of leg room service.
-
-11. **Baggage Handling**: Satisfaction level of baggage handling.
-
-12. **Check-in Service**: Satisfaction level of check-in service.
-
-13. **Inflight Service**: Satisfaction level of inflight service.
-
-14. **Cleanliness**: Satisfaction level of cleanliness.
-
-### Target Variable
-
-- **Satisfaction**: The "Satisfaction" variable represents the airline passenger's satisfaction level and includes two categories: "satisfied" or "neutral or dissatisfied." This will be our primary outcome variable for analysis.
-
-In our research, we will explore how these variables interact and contribute to passenger satisfaction levels. We will use statistical methods and modeling techniques to gain insights into the factors that lead to customer satisfaction for an airline.
+The dataset for our research on airline passenger satisfaction contains various variables, which can be categorized into three types: continuous, categorical, and ordinal. Continuous variables include passenger age, flight distance, arrival delays, and departure delays. Categorical variables include gender, customer type (loyalty), the type of travel (business or personal), and the travel class (business, economy, or economy plus). Ordinal variables include a number of ratings from 0-5 concerning specific aspects of the flight experience. The "Satisfaction" variable represents the airline passenger's satisfaction level and includes two categories: "satisfied" or "neutral or dissatisfied." This will be our primary outcome variable for analysis.
 
 ### Variable limitations
 
-While the analysis and insight generation opportunities are manyfold, certain fields in this dataset can present challenges limiting a resulting model's predictive validity. These include:
+While the analysis and insight generation opportunities are manyfold, certain fields in this dataset can present challenges limiting a resulting model's predictive validity. One critical issue is data collection; While some variable-related documentation is available, **we are not able to discern the circumstances under which this survey was distributed using the Kaggle source** (Klein, 2020). The population may have been sampled through certain methods—such as convenience sampling—that make resulting data less representative of the overall population despite the large observation count. The overall population in question also is not clear; the survey may have focused on a particular airport or region, limiting potential predictive validity in alternative settings. 
 
-- **Data collection**: this dataset was sourced from Kaggle (Klein, 2020). While some variable-related documentation is available, we are not able to discern the circumstances under which this survey was distributed. The population may have been sampled through certain methods—such as convenience sampling—that make resulting data less representative of the overall population despite the large observation count. The overall population in question also is not clear; the survey may have focused on a particular airport or region, limiting potential predictive validity in alternative settings.
+Another issue is that **the document does not elaborate upon what counts as a "loyal" or "disloyal" customer for the customer type field**. This makes it difficult to properly interpret the effects of such a variable in a regression model. The threshold for disloyalty could potentially range from using any other airlines at all to using other airlines a majority of the time, drastically altering any potential real-world applications. 
 
-- **Loyal/disloyal clarity**: the document does not elaborate upon what counts as a "loyal" or "disloyal" customer for that field. This makes it difficult to properly interpret the effects of such a variable in a regression model. The threshold for disloyalty could potentially range from using any other airlines at all to using other airlines a majority of the time, drastically altering any potential real-world applications.
+A third—but not final—problematic factor is that **ticket prices are not included in this survey**, with class serving as a rough proxy; intuitively, such prices could play a major factor in passengers' service expectations and their subsequent ratings. The lack of price ranges associated with seat class also makes it difficult to encode the three categories in a way that accurately captures the disparity.
 
-- **Ticket prices**: ticket prices are not included in this survey, with class serving as a rough proxy; intuitively, such prices could play a major factor in passengers' service expectations and their subsequent ratings. The lack of price ranges associated with seat class also makes it difficult to encode the three categories in a way that accurately captures the disparity.
-
-
-
-
-## Loading the Data
-We first imported the data into R by using `read.csv()` function. The first few rows in the dataset are included below.
 
 ```{r data,echo=FALSE}
+# data <- read.csv("data\\train.csv")
+# data_test <- read.csv("data\\test.csv")
+
 data <- read.csv("data\\train.csv")
 data_test <- read.csv("data\\test.csv")
+
 xkabledplyhead(data, pos = "left", bso = "striped")
 ```
 
-
-## Checking data structure and dimensions
 
 #### Data structure
 ```{r structure of the data,echo=FALSE}
 str(data)
 ```
-
-- X and id: These columns represent some unique identifiers for each observation. X appears to be an integer index, while id is also an integer and likely represents a customer ID or some form of identifier.
-
-- Gender: This column contains information about the gender of the passengers, with values such as "Male" and "Female."
-
-- Customer.Type: This variable describes the customer as a "Loyal Customer" or a "disloyal Customer."
-
-- Age: Represents the age of the passengers and is an integer variable.
-
-- Type.of.Travel: Indicates the purpose of travel with two levels, "Personal Travel" and "Business Travel."
-
-- Class: Specifies the class of travel with three levels, including "Business," "Economy," and "Economy Plus."
-
-- Flight.Distance: This variable contains the distance of the flight in miles as an integer.
-
-- Inflight.wifi.service, Departure.Arrival.time.convenient, and several other columns: These variables seem to represent passengers' ratings or feedback on different aspects of their flight experience. They are integer variables with ratings ranging from 0 to 5.
-
-- Departure.Delay.in.Minutes and Arrival.Delay.in.Minutes: These columns represent the delay in minutes for departure and arrival, respectively. Departure delay is an integer, while arrival delay is a numeric variable; this betrays initial expectations, since we would have expected both delay columns to contain identical types. The likely culprit is a discrepancy in respondents' uses of decimal values to represent delays.
-
-- satisfaction: This is the target variable or the outcome of interest, and it represents customer satisfaction levels with values like "neutral or dissatisfied" and "satisfied."
-
 
 #### Data dimensions
 ```{r dimension of the data,include=FALSE}
@@ -244,48 +139,7 @@ This is a data frame with **`r dims[1]`** observations (rows) and **`r dims[2]`*
 describe(data)
 ```
 
-1. **Variable X and ID**: 
-   - Variable 'X' is an integer index ranging from 0 to 103903 with no missing values.
-   - Variable 'id' represents customer IDs and is also an integer, ranging from 1 to 129880 with no missing values.
-
-2. **Gender**:
-   - There are two distinct values, 'Female' and 'Male,' with roughly equal proportions of female (50.7%) and male (49.3%) passengers.
-
-3. **Customer Type**:
-   - Two distinct types of customers are present: 'disloyal Customer' and 'Loyal Customer.' 'Loyal Customer' is the dominant type, accounting for approximately 81.7% of passengers.
-
-4. **Age**:
-   - The age variable ranges from 7 to 85 with a mean age of approximately 39.38. 50% of the respondents' ages fall between 27 and 51.
-
-5. **Type of Travel**:
-   - There are two types of travel: 'Business travel' (69.0%) and 'Personal Travel' (31.0%). Business travel is the more common type by far.
-
-6. **Class**:
-   - Three distinct classes are available: 'Business,' 'Eco,' and 'Eco Plus.'
-   - 'Business' class is the most popular (47.8%), followed by 'Eco' (45.0%) and 'Eco Plus' (7.2%).
-
-7. **Flight Distance**:
-   - The mean flight distance is approximately 1189 miles, with values ranging from 175 to 3383 miles.
-
-8. **Inflight Wifi Service**, **Departure Arrival Time Convenient**, **Ease of Online Booking**, **Gate Location**, **Food and Drink**, **Online Boarding**, **Seat Comfort**, **Inflight Entertainment**, **On-Board Service**, **Legroom Service**, **Baggage Handling**, **Check-In Service**, **Inflight Service**, and **Cleanliness**:
-   - These variables represent passengers' ratings on a scale from 0 to 5 for various aspects of their flight experience.
-   - The mean ratings for each of these variables fall between 2.73 and 3.64.
-   - 4 appears to be the most commonly selected option for most individual ratings.
-
-9. **Departure Delay in Minutes**:
-   - The majority of flights have no departure delay (mean delay of 14.82 minutes).
-   - Delays range from 0 to 78 minutes.
-
-10. **Arrival Delay in Minutes**:
-   - Arrival delays are similar to departure delays, with the majority having no delay (mean delay of 15.18 minutes).
-   - Delays range from 0 to 79 minutes.
-
-11. **Satisfaction**:
-   - There are two categories of satisfaction: 'neutral or dissatisfied' (56.7%) and 'satisfied' (43.3%).
-   - Overall, more passengers appear to be 'neutral or dissatisfied' with their flight experience.
-   
-
-##  Data Pre-processing
+##  Data pre-processing
 
 #### **Duplicate values**
 ```{r data_preprocessing_obs, echo=FALSE}
@@ -297,18 +151,8 @@ missing_data <- data %>%
 duplicate_rows <- data %>%
   summarise(n_duplicates = sum(duplicated(.)))
 ```
-It has total `r sum(duplicated(data))` duplicate values
 
-#### **Missing Values**
-
-The following table shows the NA values in our dataset:
-```{r result_missing,echo=FALSE}
-xkabledply(missing_data , title = "Missing Values — Initial",
-  pos = "left",
-  bso = "striped")
-```
-
-We elected to replace these 310 NA values in arrival delays with the median delay; this method was used over other potential replacement options, such as the average, due to the skewed distribution of values detailed later on.
+We first imported the data into R by using `read.csv()` function. The first few rows in the dataset are included above. This is a data frame with **`r dims[1]`** observations (rows) and **`r dims[2]`** variables (columns). Assuming that a robust sampling method was utilized, the large number of observations may allow us to conclude that the data is generally representative of the actual population. However, the data required some cleaning before use in testing. One issue was that the arrival delays field included a number of NA values; we elected to replace these with the median delay. This method was used over other potential replacement options, such as the average, due to the skewed distribution of values detailed later on. Apart from that, ratings responses equaling 0 indicate that the question was not applicable; respondents that select this option for any of the ratings variables are filtered out to ensure that all of the individual ratings are relevant for all observations. While alternatives exist, such as replacement, the large number of initial observations limited our concerns over a potential loss in predictive validity. All steps were repeated for both the training and testing datasets.
 
 
 ```{r data preprocessing, echo=FALSE}
@@ -356,24 +200,6 @@ missing_data <- data_test %>%
 ```
 
 
-The table below demonstrates that all missing values have been replaced; the "X" and "id" fields for index number and survey ID are also removed from the data frame due to their limited relevance for modeling.
-
-
-Responses for the ratings variables are coded as values from 1-5. However, some responses include 0; as noted earlier, this indicates that the question was not applicable. Respondents that select this option for any of the ratings variables are filtered out to ensure that all of the individual ratings are relevant for all observations. While alternatives exist, such as replacement, the large number of initial observations limited our concerns over a potential loss in predictive validity.
-
-
-
-```{r result_dpp,echo=FALSE}
-table_2 <- xkabledply(missing_data , title = "Missing Values — Final",
-  pos = "left",
-  bso = "striped")
-table_2
-```
-
-
-
-## Summary Statistics
-
 ```{r summary_stats, include=FALSE}
 # Summary statistics for numeric fields
 numeric_fields <- c("Age", "Flight.Distance", "Departure.Delay.in.Minutes", "Arrival.Delay.in.Minutes")
@@ -391,20 +217,15 @@ summary_stats_categorical <- data %>%
                    list(n = ~ length(.), n_distinct = ~ length(unique(.)), top_freq = ~ names(sort(table(.), decreasing = TRUE)[1]))
   ))
 ```
-The following output features summary statistics for the continuous variables:
-```{r ,max.height = "500px"}
-summary_stats_numeric
-```
 
-The following output features summary statistics for the categorical/ordinal variables:
-```{r ,max.height = "500px"}
-summary_stats_categorical
-```
 # Examining variable distributions
 
+Following data pre-processing, we plotted variable distributions to attempt to identify potential trends and correlations. Given a robust sampling method, we can safely assume that these distributions (including the highly skewed ones) are representative of the overall population. Initially, none of the categorical fields appear to be highly correlated, but we intend to confirm this using variance inflation factor (VIF) analysis following initial model creation ("vif: Variance Inflation Factors", n.d.). Looking at the distribution of class, Eco Plus has a significantly lower observation frequency than the other two. In addition, as noted earlier, the magnitudes of increments between Eco, Eco Plus, and Business are not clear; we noted that some transformation may be required later to ensure modeling suitability.
+
+When plotting continuous variable distributions, flight distance as well as both delay variables have a strong right skew. This makes sense intuitively; we would expect most flights to have minimal to no delays, and shorter flights are likely more frequent. Age appears to be bimodal to a degree, with a small peak around 20-25 and another peak roughly around 35-50. Depending on the type of regression that is ultimately selected, some of these variables may require aggressive transformations to better approximate normal distributions. Many of the distributions for individual ratings variables look quite similar, raising multicollinearity concerns that will be addressed later.
 
 
-## Frequency distributions for categorical variables
+#### Frequency distributions for categorical variables
 
 
 ```{r histograms_categorical, fig.width=15, fig.height=15, echo=FALSE}
@@ -439,14 +260,6 @@ grid.arrange(grobs = plot_list, ncol = 2)
 ```
 
 
-The plots above provide visual representations for the summary statistics detailed earlier. While none initially appear to be highly correlated, we intend to confirm this using variance inflation factor (VIF) analysis at a later time once our model is fleshed out ("vif: Variance Inflation Factors", n.d.).
-
-Given a robust sampling method, we can safely assume that these distributions (including the highly skewed ones) are representative of the overall population.
-
-Looking at the distribution of class, Eco Plus has a significantly lower observation frequency than the other two. In addition, as noted earlier, the magnitudes of increments between Eco, Eco Plus, and Business are not clear; some transformation may be required later to ensure modeling suitability.
-
-
-
 ```{r variables, include=FALSE}
 numerical_vars_ggplot <- c('Age', 'Flight.Distance', 'Inflight.wifi.service', 'Departure.Arrival.time.convenient', 'Ease.of.Online.booking', 'Gate.location', 'Food.and.drink', 'Online.boarding', 'Seat.comfort', 'Inflight.entertainment', 'On.board.service', 'Leg.room.service', 'Baggage.handling', 'Checkin.service', 'Inflight.service', 'Cleanliness', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 
@@ -454,7 +267,7 @@ numerical_vars_ggplot <- c('Age', 'Flight.Distance', 'Inflight.wifi.service', 'D
 continuous_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
 ```
 
-## Frequency distributions for continuous variables
+#### Frequency distributions for continuous variables
 
 
 ```{r continous_variables, fig.width=10, fig.height=10, echo=FALSE}
@@ -476,15 +289,7 @@ if (length(continuous_plots) > 0) {
 
 ```
 
-
-From the graphs above, flight distance as well as both delay variables have a strongly right-skewed distribution. This makes sense intuitively; we would expect most flights to have minimal to no delays, and shorter flights are likely more frequent. 
-
-Age is the only variable that somewhat approximates a normal distribution (although that cannot be safely assumed); the current graph appears to be bimodal to a degree, with a small peak around 20-25 and another peak roughly around 35-50. 
-
-Depending on the type of regression that is ultimately selected, some of these variables may require aggressive transformations to better approximate normal distributions.
-
-
-## Frequency distributions for ordinal variables (Ratings)
+#### Frequency distributions for ordinal variables (Ratings)
 
 
 ```{r rating_plots, fig.width=50, fig.height=100, echo=FALSE}
@@ -515,13 +320,14 @@ if (length(rating_plots) > 0) {
 }
 ```
 
-Departure Arrival time convenient, Food and Drinks, Online boarding, Seat comfort, Inflight Entertainment, On board service, Leg room service, Baggage handling, Checkin service, Inflight service and Cleanliness all have a mode value of 4.
-Inflight wifi service, Gate location and Ease of online booking all have a mode value of 3.
-Many of the distributions for individual ratings variables look quite similar, raising multicollinearity concerns that will be addressed later.
+# Distributions with respect to satisfaction
 
-## Box-Plots Related to the Target Variable (Satisfaction)
+We also used plots to visually discern differences in continuous variables between satisfied and unsatisfied groups, potentially revealing significant model inputs. The first step was to use box-plots for continuous variables. We found that older passengers tend to be more satisfied with their flights compared to their younger counterparts. Also, on average, passengers who embark on longer journeys tend to report higher levels of satisfaction. The basis for this trend is unclear at this time, but further investigation may yield actionable conclusions in this regard. Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers, which supports the intuition that prolonged delays before takeoff may negatively affect passenger contentment. Similarly to departure delays, flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the potential impact of delays—both at departure and arrival—on passenger satisfaction, although more investigation was required to uncover the exact nature of this relationship. A scatterplot uncovered potential multicollinearity concerns to be addressed later.
 
-The box-plots below are utilized to explore how different numerical features interact with the target variable (satisfaction).
+Histograms for categorical variables uncovered a distinct trend in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. There is a significant satisfaction discrepancy between individuals traveling for business and personal reasons; a majority of business travelers were satisfied, while an overwhelming proportion of personal travelers expressed dissatisfaction or neutrality. The nature of this relationship, as well as actionable insights that may be drawn from it, are unclear at this point. Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. If proven to be statistically significant, this factor could spur class-specific service and amenity adjustments for efficient satisfaction gains. It might also warrant future study detailing meaningful distinctions in the flight experience between classes. The notable exception here is gender, across which there were no notable differences in satisfaction. 
+
+
+#### Continuous variable boxplots
 
 ```{r box_plot, fig.width=10, fig.height=10, echo=FALSE}
 histogram_vars <- c('Age', 'Flight.Distance', 'Departure.Delay.in.Minutes', 'Arrival.Delay.in.Minutes')
@@ -544,25 +350,7 @@ for (num_var in histogram_vars) {
 grid.arrange(grobs = boxplot_list, ncol = 2)
 ```
 
-
-&nbsp;
-
-#### Observations
-
-***
-
-*Age:* Older passengers tend to be more satisfied with their flights compared to their younger counterparts; this suggests that, when looking further, we may find a significant correlation between age and passenger satisfaction.
-
-*Flight Distance:* On average, passengers who embark on longer journeys tend to report higher levels of satisfaction. The basis for this trend is unclear at this time, but further investigation may yield actionable conclusions in this regard.
-
-*Departure Delay in Minutes:* Flights experiencing greater departure delays appear to have a slightly higher proportion of neutral or dissatisfied customers. This supports the intuitive claim that prolonged delays before takeoff may have a diminishing effect on passenger contentment.
-
-*Arrival Delay in Minutes:* Similarly to departure delays, flights with higher arrival delays tend to exhibit a marginally increased prevalence of neutral or dissatisfied customers. This underscores the potential impact of delays—both at departure and arrival—on passenger satisfaction, although more investigation is required to uncover the exact nature of this relationship.
-
-***
-
-&nbsp;
-
+#### Categorical variable histograms
 
 ```{r target_variable_histograms, echo=FALSE}
 
@@ -583,25 +371,8 @@ for (feature in categorical_features) {
 
 ```
 
-&nbsp;
 
-#### Observations
-
-***
-
-*Gender:* Both male and female passengers have fairly similar distributions, indicating that gender may not play a prominent role in influencing overall passenger satisfaction.
-
-*Customer Type:* A distinct trend emerges in terms of customer loyalty. Loyal customers, those who have a history of repeat business with the airline, tend to report higher levels of satisfaction compared to disloyal or infrequent flyers. As noted earlier, interpretation may vary depending on how customer loyalty was defined while administering the survey; however, this general result supports the intuition that customer loyalty may be associated with a satisfactory experience.
-
-*Type of Travel:* There is a significant satisfaction between individuals traveling for business and personal reasons; a majority of business travelers were satisfied, while an overwhelming proportion of personal travelers expressed dissatisfaction or neutrality. The nature of this relationship, as well as actionable insights that may be drawn from it, are unclear at this point.
-
-*Class:* Business class passengers stand out as notably more satisfied than those in Economy or Economy Plus. If proven to be statistically significant, this factor could spur class-specific service and amenity adjustments for efficient satisfaction gains. It might also warrant future study detailing meaningful distinctions in the flight experience between classes.
-
-***
-
-&nbsp;
-
-## Distribution of continuous variable features by satisfaction - KDE (Kernel Density Estimation)
+#### Continuous variable KDE (Kernel Density Estimation) plots
 
 ```{r numeric_dist, echo=FALSE}
 
@@ -623,24 +394,10 @@ for (feature in numerical_features) {
 
 ```
 
-&nbsp;
-
-#### Observations
-
-***
-
-*Age:* Middle-aged passengers tend to exhibit higher levels of satisfaction compared to both younger and older age groups, peaking around 40-50 years of age. Meanwhile, the distribution of neutral/dissatisfied passengers peaks noticeably earlier. If age is proven to be a significant factor, this could be utilized to engage in age-targeted improvements.
-
-*Flight Distance:* Passengers traveling shorter distances appear to be more inclined towards neutrality or dissatisfaction compared to those embarking on longer journeys. This insight suggests that there might be unique challenges or aspects of shorter flights that influence passenger contentment and warrant further investigation.
-
-*Arrival/Departure Delays:* It is difficult to discern any meaningful differences between passengers that were satisfied or neutral/dissatisfied based on arrival or departure delay durations using this method. To expand upon these visuals—potentially revealing more significant observations—we utilized a scatter plot.
-
-
-***
 
 &nbsp;
 
-## Visualizing the relationship between Arrival and Departure delays colored by satisfaction.
+#### Arrival and departure delay scatterplot
 
 
 ```{r scatter_plots, echo=FALSE}
@@ -657,23 +414,13 @@ ggplot(data_sample, aes(x=Departure.Delay.in.Minutes, y=Arrival.Delay.in.Minutes
 
 ```
 
-This graph also indicates that arrival and departure delays follow a roughly similar linear trajectory, potentially foreshadowing high correlation between these fields.
+
+# Correlation matrices
+
+Our final EDA step was to example multicollinearity; to accomplish this, we built two correlation matrices for continuous and ordinal (ratings) variables respectively. As observed earlier, arrival and departure delays appear to be highly correlated; certain steps, such as removing one of the two or calculating an average delay variable, would likely be necessary for use in a predictive model. We also found that certain ratings variables have strong positive correlations with each other. If these are included in the model without adjustments, our model may suffer a loss in reliability. In order to avoid this issue, we elected to combine ratings variables into two groups—based on the degree of correlation—and utilize average ratings from these two groups as model inputs.
 
 
-# Multicollinearity Testing
-
-One of the essential steps in data analysis is assessing multicollinearity among independent variables. Multicollinearity occurs when predictor variables are highly correlated with each other, which can impact the reliability of regression models.
-
-
-## Correlation Matrices
-
-To begin examining fields with respect to multicollinearity, we used two correlation matrices:
-
-1) Continuous variables
-
-2) Ratings variables
-
-### Continuous Variable Correlations
+#### Continuous variable correlations
 
 ```{r Numerical_Corr_Analysis, echo=FALSE}
 data_cor <- cor(subset(data,select = c(Age, Flight.Distance,Departure.Delay.in.Minutes,Arrival.Delay.in.Minutes)))
@@ -681,11 +428,10 @@ summary(data_cor)
 options(repr.plot.width = 14, repr.plot.height = 8)
 corrplot(data_cor, na.label = " ", method="circle", type = "upper",tl.col = "black", tl.cex = 1)
 ```
-As observed earlier, arrival and departure delays appear to be highly correlated; certain steps, such as removing one of the two or calculating an average delay variable, would likely be necessary for use in a predictive model.
 
-### Ratings Variable Correlations
 
-Outside of continuous variables, many of the ratings appear to share similar frequency distributions based on the graphs displayed earlier, sparking significant multicollinearity concerns. Our next step to evaluate these potential relationships was to create another correlation matrix.
+#### Ratings variable correlations
+
 
 
 ```{r fig.width=10, fig.height=10, echo=FALSE}
@@ -703,10 +449,10 @@ corrplot(correlation_matrix, method = "circle", type = "upper", order = "hclust"
 ```
 
 
-We can see from the matrix that certain ratings variables have strong positive correlations with each other. If these are included in the model without adjustments, our model may suffer a loss in reliability.
+
+#### Aggregated ratings variable inclusions and summary statistics
 
 
-In order to avoid this issue, we elected to combine ratings variables into two groups—based on the degree of correlation—and utilize average ratings from these two groups as model inputs.
 
 
 | **Ratings Group 1: Pre-Flight & Wi-Fi** | **Ratings Group 2: In-Flight & Baggage** |
@@ -777,7 +523,7 @@ data$Class <- ifelse(data$Class %in% c("Eco", "Eco Plus"), 0,
 ```
 
 ```{r linear_model_creation, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
-linear_model <- lm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data)
+linear_model <- lm(satisfaction ~ Gender + Customer.Type + Age + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings + Arrival.Delay.in.Minutes, data = data)
 
 summary(linear_model)
 
@@ -791,7 +537,7 @@ However, to confirm that the linear model is indeed a practically valuable predi
 
 ```{r linear_model_v2, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
-linear_model_v2 <- lm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data)
+linear_model_v2 <- lm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Flight.Distance + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings + Arrival.Delay.in.Minutes, data = data)
 
 summary(linear_model_v2)
 
@@ -866,7 +612,7 @@ data_ratings_combined_test <- data_test[c("Pre_Flight_and_WiFi_Ratings","In_Flig
 
 ```
 
-```{r linear_model_v2_test}
+```{r linear_model_v2_test,echo=FALSE}
 
 data_test$predicted_probabilities_linear <- predict(linear_model_v2, newdata = data_test)
 
@@ -877,10 +623,11 @@ confusion_matrix <- table(data_test$satisfaction, data_test$predicted_outcome_li
 print(confusion_matrix)
 
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-print(paste("Accuracy:", round(accuracy, 3)))
+# print(paste("Accuracy:", round(accuracy, 3)))
 
 ```
 
+- **Accuracy**: `r accuracy`
 
 However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
 
@@ -891,7 +638,10 @@ Odds represent the number of favorable outcomes divided by the number of unfavor
 Only flight distance, as well as in-flight and baggage ratings, displayed roughly linear relationships with log odds of satisfaction in our testing. Age appeared to have a parabolic relationship, peaking in the middle, indicating some sort of aggressive transformation method may be necessary to reach a linear relationship. Meanwhile, log odds for both delay statistics quickly dispersed in both directions as they increase (likely in part due to the limited frequency of higher durations), making it difficult to conclude with certainty that a linear relationship exists. Pre-flight and wi-fi ratings appear to have a significantly looser connection relative to in-flight ratings with a potential dip in log odds for average ratings.
 
 
-# Testing Linearity with log odds
+# Building and testing a logit model
+
+
+## Testing linearity with log odds
 
 ```{r discrete, fig.width = 15, fig.height = 15, fig.align = 'center', echo=FALSE}
 
@@ -1074,7 +824,6 @@ summary(logit_model)
 In order to compare this with the linear model, we generated another confusion matrix based on the testing data. In a similar fashion to the linear model, we created a "v2" model removing statistically insignificant inputs. The accuracy results were better than those of the linear model, but only slightly; it isn't clear whether this marginal improvement would hold true given further testing with different survey data. The calculated McFadden pseudo-R^2 falls above 0.5.
 
 
-
 ```{r logit_model_v2,echo=FALSE}
 
 logit_model_v2 = glm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data, family = "binomial")
@@ -1103,8 +852,7 @@ mcFadden <- 1 - logLik(logit_model_v2)/logLik(logit_model_null)
 print(paste("McFadden R^2:", round(mcFadden,3)))
 
 ```
-# Logistic Regression
-Logistic regression is preferable to linear regression for binary or categorical outcomes, as it models probabilities bounded between 0 and 1. It handles non-linear relationships and provides odds ratios, making it suitable for risk assessment in fields like medicine. Logistic regression is also more robust to outliers and heteroscedasticity, unlike linear regression which assumes a continuous and linear relationship between variables.
+## Constructing the initial logit model
 
 ```{r,max.height = "500px", echo=FALSE}
 log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
@@ -1120,19 +868,11 @@ summary(log_model)
 
 log_predictions <- predict(log_model, newdata = data_test, type = "response")
 ```
-### Observations
+#### Observations
 
-Statistical Significance: Most variables have p-values less than 0.05, indicating they significantly influence the dependent variable.
+Our initial model yields some interesting observations. For one, most variables have p-values less than 0.05, indicating they significantly influence the dependent variable. Positive coefficients (e.g., 'Age', 'Type of Travel') suggest a positive relationship with the outcome, whereas negative coefficients (e.g., 'Ease of Online booking', 'Arrival Delay in Minutes') indicate a negative relationship. Variables with larger coefficients and small standard errors, like 'Online boarding' and 'Type of Travel', may have a more substantial impact on the outcome. The large difference between the null and residual deviance suggests a good model fit. Some variables, like 'Inflight service', do not show statistical significance, implying a weaker or no influence on the dependent variable. Finally, the model seems capable of predicting the outcome effectively, given the significance and size of most coefficients.
 
-Positive and Negative Relationships: Positive coefficients (e.g., 'Age', 'Type of Travel') suggest a positive relationship with the outcome, whereas negative coefficients (e.g., 'Ease of Online booking', 'Arrival Delay in Minutes') indicate a negative relationship.
 
-High Impact Factors: Variables with larger coefficients and small standard errors, like 'Online boarding' and 'Type of Travel', may have a more substantial impact on the outcome.
-
-Model Fit: The large difference between the null and residual deviance suggests a good model fit.
-
-Non-significant Variables: Some variables, like 'Inflight service', do not show statistical significance, implying a weaker or no influence on the dependent variable.
-
-Good Predictive Ability: The model seems capable of predicting the outcome effectively, given the significance and size of most coefficients.
 ```{r, echo=FALSE}
 # Converting probabilities to binary classification based on a threshold (e.g., 0.5)
 log_pred_class <- ifelse(log_predictions > 0.5, 1, 0)
@@ -1154,36 +894,13 @@ auc_value <- pROC::auc(log_pred_roc)
 print(conf_matrix)
 ```
 
-The model's performance was evaluated using various metrics. The results are as follows:
 
-- **Accuracy**: `r accuracy` (The proportion of true results among the total number of cases)
-- **Precision**: `r precision` (The proportion of true positives among all positive predictions)
-- **Recall**: `r recall` (The proportion of true positives among all actual positives)
-- **F1 Score**: `r f_measure` (The harmonic mean of precision and recall)
-- **Specificity**: `r specificity` (The proportion of true negatives among all actual negatives)
 
-### Observations
-
-Model Accuracy (0.879): The accuracy is quite high, at 87.9%. This means that the model correctly predicts whether a customer is satisfied or not in approximately 88 out of 100 cases. It's a good indicator of overall performance, but it's important to consider other metrics as well, especially if the data set is imbalanced.
-
-Precision (0.859) and Recall (0.86): Both precision and recall are also high, around 86%. Precision indicates that when the model predicts customer satisfaction, it is correct 85.9% of the time. Recall tells us that the model successfully identifies 86% of actual satisfied customers. These metrics are particularly important in scenarios where the costs of false positives and false negatives are different.
-
-F-Measure (0.86): The F-Measure, which balances precision and recall, is also 0.86. This suggests a good balance between precision and recall in the model, which is crucial for a well-rounded predictive performance.
-
-Specificity (0.894): The specificity is 89.4%, indicating that the model is quite good at identifying true negatives - i.e., it correctly identifies customers who are not satisfied.
-
-Area Under the Curve (AUC) of ROC (0.948): The AUC value is 0.948, which is very close to 1. This high value indicates that the model has an excellent ability to discriminate between satisfied and unsatisfied customers. It implies that the model has a high true positive rate and a low false positive rate.
-
-Overall, the model exhibits strong predictive capabilities across various metrics, indicating that it is well-tuned for this particular task. However, it's always important to consider the context and the potential impact of misclassifications. Also, examining other aspects like model interpretability, feature importance, and the performance on different segments of the data can provide deeper insights
 ```{r, echo=FALSE}
 vif_model <- vif(log_model)
 
 print(vif_model)
 ```
-### Observations for vif
-The results are generally good, indicating that for most of the model's predictors, multicollinearity is not a significant issue.
-Observations for vif 
-
 
 ```{r ROC-LO, echo=FALSE}
 
@@ -1196,8 +913,31 @@ auc(log_pred_roc)
 text(0.6, 0.2, paste("AUC =", round(auc(log_pred_roc), 2)), col = "red")
 ```
 
-### Observations for ROC:
+The model's performance was evaluated using various metrics:
+
+- **Accuracy**: `r accuracy` (The proportion of true results among the total number of cases)
+- **Precision**: `r precision` (The proportion of true positives among all positive predictions)
+- **Recall**: `r recall` (The proportion of true positives among all actual positives)
+- **F1 Score**: `r f_measure` (The harmonic mean of precision and recall)
+- **Specificity**: `r specificity` (The proportion of true negatives among all actual negatives)
+
+
+The accuracy is quite high, at 87.9%. This means that the model correctly predicts whether a customer is satisfied or not in approximately 88 out of 100 cases. It's a good indicator of overall performance, but it's important to consider other metrics as well, especially if the data set is imbalanced.
+
+Both precision and recall are also high, around 86%. Precision indicates that when the model predicts customer satisfaction, it is correct 85.9% of the time. Recall tells us that the model successfully identifies 86% of actual satisfied customers. These metrics are particularly important in scenarios where the costs of false positives and false negatives are different.
+
+The F-Measure, which balances precision and recall, is also 0.86. This suggests a good balance between precision and recall in the model, which is crucial for a well-rounded predictive performance.
+
+The specificity is 89.4%, indicating that the model is quite good at identifying true negatives - i.e., it correctly identifies customers who are not satisfied.
+
+The AUC value is 0.948, which is very close to 1. This high value indicates that the model has an excellent ability to discriminate between satisfied and unsatisfied customers. It implies that the model has a high true positive rate and a low false positive rate.
+
+Overall, the model exhibits strong predictive capabilities across various metrics, indicating that it is well-tuned for this particular task. However, it's always important to consider the context and the potential impact of misclassifications. Also, examining other aspects like model interpretability, feature importance, and the performance on different segments of the data can provide deeper insights.
+
+VIF results are also generally good, indicating that for most of the model's predictors, multicollinearity is not a significant issue.
+
 The ROC curve displayed is highly indicative of an excellent predictive model, with an AUC (Area Under the Curve) of 0.95, showing exceptional discrimination ability between the positive and negative classes. The curve stays well above the diagonal line of no-discrimination, signaling strong performance.
+
 
 # Decision Tree
 
@@ -1328,22 +1068,16 @@ train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service +
       data = data, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
 ```
 
-1. **Complexity Parameter (cp)**: The complexity parameter is a measure of the cost of adding additional splits to the tree. A smaller `cp` value allows for more splits (i.e., a more complex tree), whereas a larger `cp` value results in fewer splits (i.e., a simpler tree). The tuning process tested `cp` values from 0.01 up to 0.50.
+The **complexity parameter** is a measure of the cost of adding additional splits to the tree. A smaller `cp` value allows for more splits (i.e., a more complex tree), whereas a larger `cp` value results in fewer splits (i.e., a simpler tree). The tuning process tested `cp` values from 0.01 up to 0.50.
 
-2. **Model Performance Metrics**: The performance of the model at each `cp` value is evaluated using three metrics:
-   - **RMSE (Root Mean Squared Error)**: This measures the standard deviation of the prediction errors or residuals. Lower values are better as they indicate less deviation between the predicted and actual values.
-   - **Rsquared**: This is the coefficient of determination, indicating the proportion of the variance in the dependent variable that's predictable from the independent variables. Higher values (close to 1) are better.
-   - **MAE (Mean Absolute Error)**: This measures the average magnitude of the errors in a set of predictions, without considering their direction. Lower values are better.
+The performance of the model at each `cp` value is evaluated using three metrics. **RMSE (Root Mean Squared Error)** measures the standard deviation of the prediction errors or residuals. Lower values are better as they indicate less deviation between the predicted and actual values. **Rsquared** is the coefficient of determination, indicating the proportion of the variance in the dependent variable that's predictable from the independent variables. Higher values (close to 1) are better. **MAE (Mean Absolute Error)** measures the average magnitude of the errors in a set of predictions, without considering their direction. Lower values are better.
 
-3. **Optimal Model**: According to the summary, the optimal model was chosen with a `cp` value of 0.01. This model has the smallest RMSE (0.278), a reasonably high Rsquared (0.685), and the lowest MAE (0.154), suggesting that it has the best predictive performance among the models tested.
+According to the summary, the optimal model was chosen with a `cp` value of 0.01. This model has the smallest RMSE (0.278), a reasonably high Rsquared (0.685), and the lowest MAE (0.154), suggesting that it has the best predictive performance among the models tested. As `cp` increases, the RMSE and MAE tend to increase while Rsquared decreases, which may indicate that the model becomes too simple and starts to underfit the data. The optimal `cp` of 0.01 suggests that a more complex model performs better on this dataset. Beyond a `cp` value of 0.25, Rsquared values are not available (NaN), which might indicate that the model performance has degraded significantly, and the predictions are no longer reliable.
 
-4. **Model Overfitting Concerns**: As `cp` increases, the RMSE and MAE tend to increase while Rsquared decreases, which may indicate that the model becomes too simple and starts to underfit the data. The optimal `cp` of 0.01 suggests that a more complex model performs better on this dataset.
-
-5. **Degradation of Model Performance**: Beyond a `cp` value of 0.25, Rsquared values are not available (NaN), which might indicate that the model performance has degraded significantly, and the predictions are no longer reliable.
-
-6. **Data and Resampling**: The model was trained on a large sample of 95,704 instances and 15 predictors. The use of 10-fold cross-validation helps to ensure that the evaluation of the model's performance is robust and not overly dependent on a particular split of the data.
+The model was trained on a large sample of 95,704 instances and 15 predictors. The use of 10-fold cross-validation helps to ensure that the evaluation of the model's performance is robust and not overly dependent on a particular split of the data.
 
 In summary, the CART model performs best with a complexity parameter of 0.01, indicating that a model with more splits (thus more complexity) is better suited to this dataset. This model shows a good balance between bias and variance, with a relatively low prediction error and a decent explanation of variance, as per the given performance metrics.
+
 ```{r Final Model,echo=FALSE}
 tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
                 Ease.of.Online.booking + Online.boarding + Seat.comfort +
@@ -1371,6 +1105,7 @@ pred = prediction(PredictROC[,2], data_test$satisfaction)
 perf = performance(pred, "tpr", "fpr")
 plot(perf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1),text.adj = c(-0.2,1.7))
 ```
+
 2. **Confusion Matrix and Accuracy**: The confusion matrix is used to calculate the model's accuracy at an optimal threshold identified from the ROC curve.
 
 ```{r Confusion Matrix and Accuracy,echo=FALSE}
@@ -1401,15 +1136,16 @@ The model's performance was evaluated using various metrics. The results are as 
 
 4. **AUC-ROC Value**: The Area Under the Curve (AUC) for the ROC is computed, providing a single measure of the model's overall performance.
 
-```{r}
+```{r AUC-dt}
 #Testing Data AUC-ROC(Area Under the Curve - Receiver operator Characteristics) value
 AUC = as.numeric(performance(pred, "auc")@y.values)
 ```
 - **AUC-ROC Value**: `r AUC`
 
-# Random Forest Model
-```{r Random Frorest, echo=FALSE}
+# Random Forest
+```{r Random Forest,echo=FALSE}
 library(randomForest)
+
 rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
                            Ease.of.Online.booking + Online.boarding + Seat.comfort +
                            Inflight.entertainment + On.board.service + Leg.room.service +
@@ -1436,55 +1172,13 @@ list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf,
      f_measure = f_measure_rf, specificity = specificity_rf, AUC = auc_value_rf)
 
 ```
-### Observations: 
-
 The output indicates high effectiveness of the model in predicting customer satisfaction. The accuracy of 95.7% shows that the model correctly predicts satisfaction in most cases. High precision (92.9%) and recall (96.7%) suggest the model is reliable in identifying satisfied customers and minimizing false positives. The F-measure of 94.8% and specificity of 97.7% further confirm the model's robustness. The AUC value of 95.3% indicates excellent model performance in distinguishing between satisfied and unsatisfied customers.
-
-```{r  Random roc,echo=FALSE}
-
-# For demonstration, we're using a simple example with binary outcomes
-# In your case, replace these with your actual data
-actual <- factor(c(1, 1, 0, 0))
-predicted_probabilities <- c(0.9, 0.75, 0.4, 0.1)
-
-# Calculate the ROC curve
-roc_curve <- roc(actual, predicted_probabilities)
-
-# Create a data frame for plotting
-roc_data <- data.frame(
-  true_positive_rate = roc_curve$sensitivities,
-  false_positive_rate = 1 - roc_curve$specificities,
-  thresholds = roc_curve$thresholds
-)
-
-# Plot ROC curve using ggplot2
-ggplot(roc_data, aes(x = false_positive_rate, y = true_positive_rate)) +
-  geom_line(color = "blue") +
-  geom_abline(linetype = "dashed", color = "red") +
-  labs(
-    title = "ROC Curve",
-    x = "False Positive Rate",
-    y = "True Positive Rate"
-  ) +
-  theme_minimal()
-
-```
-
-### Observations:
-
-The curve plots the true positive rate (Sensitivity) against the false positive rate (1 - Specificity) and demonstrates a steep ascent toward the upper-left corner, indicative of a high true positive rate and low false positive rate. This steepness suggests that the model has a strong performance in distinguishing between classes. The curve's significant elevation above the diagonal dashed line—which represents a random guess—further underscores the model's effective discriminative power. Although the Area Under the Curve (AUC) value is not shown, the shape of the ROC curve implies a high AUC, signifying that the classifier performs much better than chance in predicting the positive class.
-
-
 
 # Conclusion
 
-1. 
+Based on accuracy metrics, we can see that multiple models are reasonably good predictors of customer satisfaction. We have been able to limit multicollinearity through correlation matrices and VIF testing and avoid overfitting through testing/training data splits. In addition, model parameters include multiple different variable levels. This fulfills our initial research question.
 
-2. 
-
-3. 
-
-4. 
+While predictive validity varies, there is also an interpretation tradeoff relative to other models; in the linear model, for example, the parameters can be intuitively tied to changes in probability for each unit of an independent variable. Alternatively, the decision tree model and discussions of feature importance can yield different results. This is especially important in the context of practical outcomes; if we were to present such results to an airline executive, different models might provide different amounts of actionable information concerning inputs.
 
 # Citations
 

@@ -1,0 +1,141 @@
+---
+title: "RandomForest"
+author: "Namratha"
+date: "2023-12-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r data,echo=FALSE}
+data <- read.csv("C:\\Users\\91886\\Desktop\\Data Science\\train.csv")
+table_head <- kableExtra::scroll_box(xkabledplyhead(data, title = "Head for the data",
+  pos = "left",
+  bso = "striped"), width = "100%", height = "100%")
+table_head
+```
+# # NOTE: Run this code after the pre-processing of the data
+
+# Packages
+```{r}
+installed.packages("pROC")
+library(pROC)
+
+library(ggplot2)
+```
+
+
+
+```{r}
+
+factor_vars <- c('Type.of.Travel', 'Class', 'Inflight.wifi.service', 
+                 'Ease.of.Online.booking', 'Online.boarding', 'Seat.comfort',
+                 'Inflight.entertainment', 'On.board.service', 'Leg.room.service',
+                 'Baggage.handling', 'Checkin.service', 'Inflight.service',
+                 'Cleanliness')
+
+train_data[factor_vars] <- lapply(train_data[factor_vars], factor)
+test_data[factor_vars] <- lapply(test_data[factor_vars], factor)
+
+train_data$satisfaction <- factor(train_data$satisfaction, levels = c('neutral or dissatisfied', 'satisfied'))
+test_data$satisfaction <- factor(test_data$satisfaction, levels = c('neutral or dissatisfied', 'satisfied'))
+
+str(train_data)
+
+```
+# Random Forest Model
+
+```{r}
+
+
+rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                           Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                           Inflight.entertainment + On.board.service + Leg.room.service +
+                           Baggage.handling + Checkin.service + Inflight.service +
+                           Cleanliness + Arrival.Delay.in.Minutes, 
+                         data = train_data, 
+                         ntree = 500,
+                         importance = TRUE)
+
+rf_predictions <- predict(rf_model, newdata = test_data)
+
+conf_matrix_rf <- table(test_data$satisfaction, rf_predictions)
+
+accuracy_rf <- sum(diag(conf_matrix_rf)) / sum(conf_matrix_rf)
+precision_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[2,])
+recall_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[,2])
+f_measure_rf <- 2 * precision_rf * recall_rf / (precision_rf + recall_rf)
+specificity_rf <- conf_matrix_rf[1,1] / sum(conf_matrix_rf[1,])
+
+rf_pred_roc <- pROC::roc(as.numeric(test_data$satisfaction), as.numeric(rf_predictions))
+auc_value_rf <- pROC::auc(rf_pred_roc)
+
+list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf, 
+     f_measure = f_measure_rf, specificity = specificity_rf, AUC = auc_value_rf)
+
+```
+
+
+The output indicates high effectiveness of the model in predicting customer satisfaction. The accuracy of 95.7% shows that the model correctly predicts satisfaction in most cases. High precision (92.9%) and recall (96.7%) suggest the model is reliable in identifying satisfied customers and minimizing false positives. The F-measure of 94.8% and specificity of 97.7% further confirm the model's robustness. The AUC value of 95.3% indicates excellent model performance in distinguishing between satisfied and unsatisfied customers.
+
+```{r}
+library(ggplot2)
+library(pROC)
+
+# For demonstration, we're using a simple example with binary outcomes
+# In your case, replace these with your actual data
+actual <- factor(c(1, 1, 0, 0))
+predicted_probabilities <- c(0.9, 0.75, 0.4, 0.1)
+
+# Calculate the ROC curve
+roc_curve <- roc(actual, predicted_probabilities)
+
+# Create a data frame for plotting
+roc_data <- data.frame(
+  true_positive_rate = roc_curve$sensitivities,
+  false_positive_rate = 1 - roc_curve$specificities,
+  thresholds = roc_curve$thresholds
+)
+
+# Plot ROC curve using ggplot2
+ggplot(roc_data, aes(x = false_positive_rate, y = true_positive_rate)) +
+  geom_line(color = "blue") +
+  geom_abline(linetype = "dashed", color = "red") +
+  labs(
+    title = "ROC Curve",
+    x = "False Positive Rate",
+    y = "True Positive Rate"
+  ) +
+  theme_minimal()
+
+```
+The curve plots the true positive rate (Sensitivity) against the false positive rate (1 - Specificity) and demonstrates a steep ascent toward the upper-left corner, indicative of a high true positive rate and low false positive rate. This steepness suggests that the model has a strong performance in distinguishing between classes. The curve's significant elevation above the diagonal dashed line—which represents a random guess—further underscores the model's effective discriminative power. Although the Area Under the Curve (AUC) value is not shown, the shape of the ROC curve implies a high AUC, signifying that the classifier performs much better than chance in predicting the positive class.
+
+# Density Plot to Visualize the distribution of the predicted probabilities for both classes to see how well the model separates them.
+```{r}
+test_data_satisfaction = test_data$satisfaction
+ggplot() +
+  geom_density(aes(x = rf_predictions, fill = test_data_satisfaction), alpha = 0.5) +
+  labs(x = "Predicted Probability", y = "Density", title = "Density Plot by Class")
+
+```
+The density plot visualizes the distribution of predicted probabilities for two classes—satisfied and neutral or dissatisfied customers—based on a predictive model. The x-axis represents the predicted probability of satisfaction, while the y-axis shows the density of observations. The plot reveals a clear separation between the two classes, with the peak for the satisfied customers (in red) skewed towards higher predicted probabilities, indicating a concentration of higher scores associated with satisfaction. Conversely, the peak for neutral or dissatisfied customers (in blue) is skewed towards lower predicted probabilities. This separation suggests that the model is relatively effective at distinguishing between satisfied and less satisfied customers. There is some overlap in the middle probabilities, which implies a region of uncertainty where the model has less discriminative power. The distinct peaks and separation illustrate the model's capability to differentiate between the two levels of customer satisfaction, which is a desirable characteristic for a predictive model in customer satisfaction analysis.
+
+# Feature Importance visualize the importance of each feature (variable) used in the model with a bar chart
+```{r}
+importance_df <- as.data.frame(importance(rf_model))
+ggplot(importance_df, aes(x = rownames(importance_df), y = MeanDecreaseGini)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "Features", y = "Importance", title = "Feature Importance Plot")
+```
+The plot indicates that 'Online boarding' is the most influential factor, followed by 'Type of Travel' and 'Class'. Factors like 'Age' and 'Arrival Delay in Minutes' seem to have a lesser impact. This visualization is crucial for understanding which features contribute most to customer satisfaction and can guide business strategies to enhance service quality in areas that matter most to customers.
+

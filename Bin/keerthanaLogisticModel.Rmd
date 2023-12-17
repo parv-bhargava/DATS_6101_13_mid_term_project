@@ -1,0 +1,85 @@
+---
+title: "Logestic model"
+author: "Keerthana"
+date: "2023-12-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(caret)
+library(nnet)
+
+# Load the datasets
+train_data <- read.csv('train.csv')
+test_data <- read.csv('test.csv')
+
+# Display the first few rows of the train dataset
+head(train_data)
+```
+
+
+
+```{r}
+
+# Preprocess the data
+
+# Convert categorical variables to factors
+factor_vars <- c('Type.of.Travel', 'Class', 'Inflight.wifi.service', 
+                 'Ease.of.Online.booking', 'Online.boarding', 'Seat.comfort',
+                 'Inflight.entertainment', 'On.board.service', 'Leg.room.service',
+                 'Baggage.handling', 'Checkin.service', 'Inflight.service',
+                 'Cleanliness')
+
+train_data[factor_vars] <- lapply(train_data[factor_vars], factor)
+test_data[factor_vars] <- lapply(test_data[factor_vars], factor)
+
+# Convert target variable to factor
+train_data$satisfaction <- factor(train_data$satisfaction, levels = c('neutral or dissatisfied', 'satisfied'))
+test_data$satisfaction <- factor(test_data$satisfaction, levels = c('neutral or dissatisfied', 'satisfied'))
+
+# Check the structure of the data
+str(train_data)
+
+```
+
+
+
+```{r}
+library(caret)
+library(pROC)
+library(dplyr)
+
+
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = train_data)
+
+log_predictions <- predict(log_model, newdata = test_data, type = "response")
+
+# Converting probabilities to binary classification based on a threshold (e.g., 0.5)
+log_pred_class <- ifelse(log_predictions > 0.5, 1, 0)
+
+conf_matrix <- table(test_data$satisfaction, log_pred_class)
+
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+precision <- conf_matrix[2,2] / sum(conf_matrix[2,])
+recall <- conf_matrix[2,2] / sum(conf_matrix[,2])
+f_measure <- 2 * precision * recall / (precision + recall)
+specificity <- conf_matrix[1,1] / sum(conf_matrix[1,])
+
+log_pred_roc <- pROC::roc(test_data$satisfaction, log_predictions)
+auc_value <- pROC::auc(log_pred_roc)
+
+list(accuracy = accuracy, precision = precision, recall = recall, 
+     f_measure = f_measure, specificity = specificity, AUC = auc_value)
+```
+
