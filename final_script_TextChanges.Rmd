@@ -114,8 +114,8 @@ A third—but not final—problematic factor is that **ticket prices are not inc
 # data <- read.csv("data\\train.csv")
 # data_test <- read.csv("data\\test.csv")
 
-data <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\train.csv")
-data_test <- read.csv("C:\\Users\\jehan\\DATS6101\\Midterm\\data\\test.csv")
+data <- read.csv("data\\train.csv")
+data_test <- read.csv("data\\test.csv")
 
 xkabledplyhead(data, pos = "left", bso = "striped")
 ```
@@ -612,7 +612,7 @@ data_ratings_combined_test <- data_test[c("Pre_Flight_and_WiFi_Ratings","In_Flig
 
 ```
 
-```{r linear_model_v2_test}
+```{r linear_model_v2_test,echo=FALSE}
 
 data_test$predicted_probabilities_linear <- predict(linear_model_v2, newdata = data_test)
 
@@ -623,10 +623,11 @@ confusion_matrix <- table(data_test$satisfaction, data_test$predicted_outcome_li
 print(confusion_matrix)
 
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
-print(paste("Accuracy:", round(accuracy, 3)))
+# print(paste("Accuracy:", round(accuracy, 3)))
 
 ```
 
+- **Accuracy**: `r accuracy` 
 
 However, it is not yet clear that a linear model would be the best predictor available. **Logistic regression**, which predicts the log odds of satisfaction. is the dominant approach for modeling binary variables (Allison, 2015). Logistic regression models utilize different assumptions relative to linear models, significantly altering the necessary EDA steps. Rather than a linear relationship between parameters and the dependent variable, logistic regression assumes a linear relationship between parameters and the log odds. Independence of errors and multicollinearity remain as assumptions  for both linear and logistic models. Homoskedasticity and normally distributed residuals are both not required under logistic regression ("Assumptions of Logistic Regression", n.d.).
 
@@ -1141,81 +1142,11 @@ AUC = as.numeric(performance(pred, "auc")@y.values)
 ```
 - **AUC-ROC Value**: `r AUC`
 
-# Random Forest Model
-```{r Random Frorest, echo=FALSE}
-library(randomForest)
-rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
-                           Ease.of.Online.booking + Online.boarding + Seat.comfort +
-                           Inflight.entertainment + On.board.service + Leg.room.service +
-                           Baggage.handling + Checkin.service + Inflight.service +
-                           Cleanliness + Arrival.Delay.in.Minutes, 
-                         data = data, 
-                         ntree = 2,
-                         importance = TRUE)
-
-rf_predictions <- predict(rf_model, newdata = data_test)
-
-conf_matrix_rf <- table(data_test$satisfaction, rf_predictions)
-
-accuracy_rf <- sum(diag(conf_matrix_rf)) / sum(conf_matrix_rf)
-precision_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[2,])
-recall_rf <- conf_matrix_rf[2,2] / sum(conf_matrix_rf[,2])
-f_measure_rf <- 2 * precision_rf * recall_rf / (precision_rf + recall_rf)
-specificity_rf <- conf_matrix_rf[1,1] / sum(conf_matrix_rf[1,])
-
-rf_pred_roc <- pROC::roc(as.numeric(data_test$satisfaction), as.numeric(rf_predictions))
-auc_value_rf <- pROC::auc(rf_pred_roc)
-
-list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf, 
-     f_measure = f_measure_rf, specificity = specificity_rf, AUC = auc_value_rf)
-
-```
-
-
-The output indicates high effectiveness of the model in predicting customer satisfaction. The accuracy of 95.7% shows that the model correctly predicts satisfaction in most cases. High precision (92.9%) and recall (96.7%) suggest the model is reliable in identifying satisfied customers and minimizing false positives. The F-measure of 94.8% and specificity of 97.7% further confirm the model's robustness. The AUC value of 95.3% indicates excellent model performance in distinguishing between satisfied and unsatisfied customers.
-
-```{r  Random roc,echo=FALSE}
-
-# For demonstration, we're using a simple example with binary outcomes
-# In your case, replace these with your actual data
-actual <- factor(c(1, 1, 0, 0))
-predicted_probabilities <- c(0.9, 0.75, 0.4, 0.1)
-
-# Calculate the ROC curve
-roc_curve <- roc(actual, predicted_probabilities)
-
-# Create a data frame for plotting
-roc_data <- data.frame(
-  true_positive_rate = roc_curve$sensitivities,
-  false_positive_rate = 1 - roc_curve$specificities,
-  thresholds = roc_curve$thresholds
-)
-
-# Plot ROC curve using ggplot2
-ggplot(roc_data, aes(x = false_positive_rate, y = true_positive_rate)) +
-  geom_line(color = "blue") +
-  geom_abline(linetype = "dashed", color = "red") +
-  labs(
-    title = "ROC Curve",
-    x = "False Positive Rate",
-    y = "True Positive Rate"
-  ) +
-  theme_minimal()
-
-```
-
-The curve plots the true positive rate (Sensitivity) against the false positive rate (1 - Specificity) and demonstrates a steep ascent toward the upper-left corner, indicative of a high true positive rate and low false positive rate. This steepness suggests that the model has a strong performance in distinguishing between classes. The curve's significant elevation above the diagonal dashed line—which represents a random guess—further underscores the model's effective discriminative power. Although the Area Under the Curve (AUC) value is not shown, the shape of the ROC curve implies a high AUC, signifying that the classifier performs much better than chance in predicting the positive class.
-
-
-
 # Conclusion
 
 Based on accuracy metrics, we can see that multiple models are reasonably good predictors of customer satisfaction. We have been able to limit multicollinearity through multicollinearity testing and avoid overfitting through testing/training data splits. In addition, model parameters include multiple different variable levels. This fulfills our initial research question.
 
 While predictive validity varies, there is also an interpretation tradeoff relative to other models; in the linear model, for example, the parameters can be intuitively tied to changes in probability for each unit of an independent variable. Alternatively, the decision tree model and discussions of feature importance can yield different results. This is especially important in the context of practical outcomes; if we were to present such results to an airline executive, different models might provide different amounts of actionable information concerning inputs.
-
-
-
 
 
 
