@@ -1106,7 +1106,7 @@ print(paste("McFadden R^2:", round(mcFadden,3)))
 # Logistic Regression
 Logistic regression is preferable to linear regression for binary or categorical outcomes, as it models probabilities bounded between 0 and 1. It handles non-linear relationships and provides odds ratios, making it suitable for risk assessment in fields like medicine. Logistic regression is also more robust to outliers and heteroscedasticity, unlike linear regression which assumes a continuous and linear relationship between variables.
 
-```{r, echo=FALSE}
+```{r,max.height = "500px", echo=FALSE}
 log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
                    Ease.of.Online.booking + Online.boarding + Seat.comfort +
                    Inflight.entertainment + On.board.service + Leg.room.service +
@@ -1318,7 +1318,7 @@ cpGrid = expand.grid( .cp = seq(0.01,0.5,0.01))
 
 2. **Cross-Validation Execution**: The model is trained across a range of `cp` values to find the optimal model.
 
-```{r Cross validation,echo=FALSE}
+```{r Cross validation,max.height = "500px",echo=FALSE}
 # Perform the cross validation
 train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
         Ease.of.Online.booking + Online.boarding + Seat.comfort +
@@ -1408,8 +1408,6 @@ AUC = as.numeric(performance(pred, "auc")@y.values)
 - **AUC-ROC Value**: `r AUC`
 
 # Random Forest Model
-
-
 ```{r Random Frorest, echo=FALSE}
 library(randomForest)
 rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
@@ -1438,7 +1436,6 @@ list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf,
      f_measure = f_measure_rf, specificity = specificity_rf, AUC = auc_value_rf)
 
 ```
-
 ### Observations: 
 
 The output indicates high effectiveness of the model in predicting customer satisfaction. The accuracy of 95.7% shows that the model correctly predicts satisfaction in most cases. High precision (92.9%) and recall (96.7%) suggest the model is reliable in identifying satisfied customers and minimizing false positives. The F-measure of 94.8% and specificity of 97.7% further confirm the model's robustness. The AUC value of 95.3% indicates excellent model performance in distinguishing between satisfied and unsatisfied customers.
