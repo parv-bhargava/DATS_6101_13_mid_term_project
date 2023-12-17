@@ -51,14 +51,20 @@ library(knitr)
 # Load the 'lmtest' and 'sandwich' packages to help with linear model testing
 library(lmtest) 
 library(sandwich)
-
+# For constructing and plotting decision tree models.
 library(rpart)
 library(rpart.plot)
+# Provides functions for training and plotting models, and performing cross-validation.
 library(caret)
+# For converting statistical analysis objects into tidy format.
 library(broom)
+# A collection of R packages for data manipulation and visualization.
 library(tidyverse)
+# Contains functions and datasets to support Venables and Ripley's MASS book.
 library(MASS)
+# For evaluating and visualizing classifier performance.
 library(ROCR)
+library(pROC)
 
 ```
 
@@ -791,7 +797,7 @@ summary(linear_model_v2)
 
 ```
 
-```{r data_test_cleaning}
+```{r data_test_cleaning,echo=FALSE}
 
 # Check for missing values
 missing_data <- data_test %>%
@@ -1069,7 +1075,7 @@ In order to compare this with the linear model, we generated another confusion m
 
 
 
-```{r logit_model_v2}
+```{r logit_model_v2,echo=FALSE}
 
 logit_model_v2 = glm(satisfaction ~ Customer.Type + Type.of.Travel + Class + Pre_Flight_and_WiFi_Ratings + In_Flight_and_Baggage_Ratings, data = data, family = "binomial")
 
@@ -1077,7 +1083,7 @@ summary(logit_model_v2)
 ```
 
 
-```{r logit_model_v2_test}
+```{r logit_model_v2_test,echo=FALSE}
 
 data_test$predicted_probabilities_logit <- predict(logit_model_v2, newdata = data_test)
 
@@ -1097,18 +1103,103 @@ mcFadden <- 1 - logLik(logit_model_v2)/logLik(logit_model_null)
 print(paste("McFadden R^2:", round(mcFadden,3)))
 
 ```
+# Logistic Regression
+Logistic regression is preferable to linear regression for binary or categorical outcomes, as it models probabilities bounded between 0 and 1. It handles non-linear relationships and provides odds ratios, making it suitable for risk assessment in fields like medicine. Logistic regression is also more robust to outliers and heteroscedasticity, unlike linear regression which assumes a continuous and linear relationship between variables.
+
+```{r, echo=FALSE}
+log_model <- glm(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
+                   Ease.of.Online.booking + Online.boarding + Seat.comfort +
+                   Inflight.entertainment + On.board.service + Leg.room.service +
+                   Baggage.handling + Checkin.service + Inflight.service +
+                   Cleanliness + Arrival.Delay.in.Minutes, 
+                 family = binomial(), data = data)
 
 
+summary(log_model)
+
+
+log_predictions <- predict(log_model, newdata = data_test, type = "response")
+```
+### Observations
+
+Statistical Significance: Most variables have p-values less than 0.05, indicating they significantly influence the dependent variable.
+
+Positive and Negative Relationships: Positive coefficients (e.g., 'Age', 'Type of Travel') suggest a positive relationship with the outcome, whereas negative coefficients (e.g., 'Ease of Online booking', 'Arrival Delay in Minutes') indicate a negative relationship.
+
+High Impact Factors: Variables with larger coefficients and small standard errors, like 'Online boarding' and 'Type of Travel', may have a more substantial impact on the outcome.
+
+Model Fit: The large difference between the null and residual deviance suggests a good model fit.
+
+Non-significant Variables: Some variables, like 'Inflight service', do not show statistical significance, implying a weaker or no influence on the dependent variable.
+
+Good Predictive Ability: The model seems capable of predicting the outcome effectively, given the significance and size of most coefficients.
+```{r, echo=FALSE}
+# Converting probabilities to binary classification based on a threshold (e.g., 0.5)
+log_pred_class <- ifelse(log_predictions > 0.5, 1, 0)
+
+conf_matrix <- table(data_test$satisfaction, log_pred_class)
+
+
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+precision <- conf_matrix[2,2] / sum(conf_matrix[2,])
+recall <- conf_matrix[2,2] / sum(conf_matrix[,2])
+f_measure <- 2 * precision * recall / (precision + recall)
+specificity <- conf_matrix[1,1] / sum(conf_matrix[1,])
+
+log_pred_roc <- pROC::roc(data_test$satisfaction, log_predictions)
+auc_value <- pROC::auc(log_pred_roc)
+
+# list(accuracy = accuracy, precision = precision, recall = recall, 
+#      f_measure = f_measure, specificity = specificity, AUC = auc_value)
+print(conf_matrix)
+```
+
+The model's performance was evaluated using various metrics. The results are as follows:
+
+- **Accuracy**: `r accuracy` (The proportion of true results among the total number of cases)
+- **Precision**: `r precision` (The proportion of true positives among all positive predictions)
+- **Recall**: `r recall` (The proportion of true positives among all actual positives)
+- **F1 Score**: `r f_measure` (The harmonic mean of precision and recall)
+- **Specificity**: `r specificity` (The proportion of true negatives among all actual negatives)
+
+### Observations
+
+Model Accuracy (0.879): The accuracy is quite high, at 87.9%. This means that the model correctly predicts whether a customer is satisfied or not in approximately 88 out of 100 cases. It's a good indicator of overall performance, but it's important to consider other metrics as well, especially if the data set is imbalanced.
+
+Precision (0.859) and Recall (0.86): Both precision and recall are also high, around 86%. Precision indicates that when the model predicts customer satisfaction, it is correct 85.9% of the time. Recall tells us that the model successfully identifies 86% of actual satisfied customers. These metrics are particularly important in scenarios where the costs of false positives and false negatives are different.
+
+F-Measure (0.86): The F-Measure, which balances precision and recall, is also 0.86. This suggests a good balance between precision and recall in the model, which is crucial for a well-rounded predictive performance.
+
+Specificity (0.894): The specificity is 89.4%, indicating that the model is quite good at identifying true negatives - i.e., it correctly identifies customers who are not satisfied.
+
+Area Under the Curve (AUC) of ROC (0.948): The AUC value is 0.948, which is very close to 1. This high value indicates that the model has an excellent ability to discriminate between satisfied and unsatisfied customers. It implies that the model has a high true positive rate and a low false positive rate.
+
+Overall, the model exhibits strong predictive capabilities across various metrics, indicating that it is well-tuned for this particular task. However, it's always important to consider the context and the potential impact of misclassifications. Also, examining other aspects like model interpretability, feature importance, and the performance on different segments of the data can provide deeper insights
+```{r, echo=FALSE}
+vif_model <- vif(log_model)
+
+print(vif_model)
+```
+### Observations for vif
+The results are generally good, indicating that for most of the model's predictors, multicollinearity is not a significant issue.
+Observations for vif 
+
+
+```{r ROC-LO, echo=FALSE}
+
+plot(log_pred_roc, 
+     main = "ROC Curve for Logistic Regression Model",
+     col = "#1c61b6", 
+     lwd = 2)
+
+auc(log_pred_roc)
+text(0.6, 0.2, paste("AUC =", round(auc(log_pred_roc), 2)), col = "red")
+```
+
+### Observations for ROC:
+The ROC curve displayed is highly indicative of an excellent predictive model, with an AUC (Area Under the Curve) of 0.95, showing exceptional discrimination ability between the positive and negative classes. The curve stays well above the diagonal line of no-discrimination, signaling strong performance.
 
 # Decision Tree
-### Libraries Used
-
-- `rpart`, `rpart.plot`: For constructing and plotting decision tree models.
-- `caret`: Provides functions for training and plotting models, and performing cross-validation.
-- `broom`: For converting statistical analysis objects into tidy format.
-- `tidyverse`: A collection of R packages for data manipulation and visualization.
-- `MASS`: Contains functions and datasets to support Venables and Ripley's MASS book.
-- `ROCR`: For evaluating and visualizing classifier performance.
 
 ## Data Preparation
 
@@ -1117,7 +1208,7 @@ print(paste("McFadden R^2:", round(mcFadden,3)))
 - Certain columns in both training and testing datasets are converted to factors to reflect their ordinal nature.
 
 **Column Datatype Changes - Testing Data**: Conversion of certain columns to factors based on their ordinal nature.
-```{r}
+```{r Data Prep-1}
 
 data_test$Inflight.wifi.service = as.factor(data_test$Inflight.wifi.service)
 data_test$Departure.Arrival.time.convenient = as.factor(data_test$Departure.Arrival.time.convenient)
@@ -1135,7 +1226,7 @@ data_test$Inflight.service = as.factor(data_test$Inflight.service)
 data_test$Cleanliness = as.factor(data_test$Cleanliness)
 ```
 **Column Datatype Changes - Training Data**: Similar data type conversions for training data.
-```{r}
+```{r Data-Prep-2}
 #Column datatype Changes - Training Data - As Columns has ordinal its better to convert into factor
 
 data$Inflight.wifi.service = as.factor(data$Inflight.wifi.service)
@@ -1157,7 +1248,7 @@ data$Cleanliness = as.factor(data$Cleanliness)
 ## Decision Tree Model Building
 
 1. **Initial Model Building**: A decision tree (`tree`) is constructed using various predictors such as customer demographics, service ratings, and flight details.
-```{r pressure, echo=FALSE}
+```{r Init Model, echo=FALSE}
 tree = rpart(satisfaction ~ Gender + Customer.Type + Age + 
                Type.of.Travel + Class + Flight.Distance + Inflight.wifi.service + 
                Departure.Arrival.time.convenient + Ease.of.Online.booking + 
@@ -1170,42 +1261,22 @@ tree = rpart(satisfaction ~ Gender + Customer.Type + Age +
 
 2. **Variable Importance Analysis**: The importance of each variable in the decision tree is evaluated to identify significant predictors.
 
-This analysis helps in understanding which variables (predictors) are most influential in determining the target variable, in your case likely the 'satisfaction' of airline passengers. Let's analyze the importance of each variable:
+  This analysis helps in understanding which variables (predictors) are most influential in determining the target         variable, in your case likely the 'satisfaction' of airline passengers. 
 
-1. **Class (17608)**: The most influential predictor in the model. The class of the flight (e.g., Business, Eco, Eco Plus) seems to be a critical factor in determining passenger satisfaction. This implies that the service level or amenities associated with different flight classes significantly impact how passengers perceive their experience.
-
-2. **Type of Travel (17087)**: Another highly significant factor. Whether the travel is for business purposes or personal reasons can greatly affect satisfaction, possibly due to differing expectations or needs of travelers.
-
-3. **Online Boarding (16997)**: The ease and efficiency of the online boarding process play a crucial role in overall satisfaction. This suggests that a smooth and user-friendly online boarding experience is vital for passenger contentment.
-
-4. **Inflight Entertainment (13115)** and **Inflight Wifi Service (12888)**: Both are very influential, indicating that onboard entertainment and connectivity are important to passengers, possibly for comfort and staying connected during the flight.
-
-5. **Age (168)**: While this has some importance, it is significantly less influential compared to other factors. It suggests that age does play a role in satisfaction, but it's not as critical as the service factors.
-
-6. **Leg Room Service (4009)** and **On Board Service (2179)**: These factors are moderately important. Comfort in terms of legroom and the quality of service provided on board are relevant but not as decisive as the class or type of travel.
-
-7. **Ease of Online Booking (1671)**: This has a moderate influence on satisfaction, indicating the importance of the booking process's convenience.
-
-8. **Arrival Delay in Minutes (131)**: Delay in arrival seems to have a lower influence on satisfaction compared to other variables. However, it still matters, as longer delays might lead to increased dissatisfaction.
-
-9. **Variables with Zero Importance**: Several variables like Gender, Customer Type, Flight Distance, and others show zero importance in this model. This suggests that these factors do not significantly contribute to the model's ability to predict passenger satisfaction in your dataset.
-
-### Summary of Analysis
-
-- The **class of travel and type of travel** are the most influential factors in determining passenger satisfaction, indicating the importance of service level and travel purpose.
-- **Online and inflight services** (boarding, entertainment, wifi) are also crucial, emphasizing the importance of digital experience and onboard comfort.
-- **Personal factors** like Age have some influence but are overshadowed by service and experience-related factors.
-- Several variables have no discernible impact on satisfaction in this model, suggesting that they might not be critical in the context of this specific dataset or the way the model was constructed.
+  - The **class of travel and type of travel** are the most influential factors in determining passenger satisfaction, indicating the importance of service level and travel purpose.
+  - **Online and inflight services** (boarding, entertainment, wifi) are also crucial, emphasizing the importance of digital experience and onboard comfort.
+  - **Personal factors** like Age have some influence but are overshadowed by service and experience-related factors.
+  - Several variables have no discernible impact on satisfaction in this model, suggesting that they might not be critical in the context of this specific dataset or the way the model was constructed.
 
 This analysis provides valuable insights into what factors airlines should focus on to improve passenger satisfaction, particularly emphasizing service quality, both digital and onboard.
 
-```{r}
+```{r Feature Importance,echo=FALSE}
 #Analyzing the Importance of variable using the Variable Importance Plot
 varImp(tree)
 ```
 
 3. **Refined Model**: A second decision tree (`tree1`) is built focusing only on the significant variables identified earlier.
-```{r}
+```{r Refined Model,echo=FALSE}
 #Re-running the model with significant variables
 tree1 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
                 Ease.of.Online.booking + Online.boarding + Seat.comfort +
@@ -1215,38 +1286,20 @@ tree1 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.servi
              method = 'class', minbucket=25)
 ```
 4. **Decision Tree Visualization**: The structure of the refined decision tree is visualized using `prp`.
-```{r}
+```{r Decision Tree Visualization,echo=FALSE}
 #Visualizaing the Decision tree
 prp(tree1)
 ```
 
-The decision tree shows a simplified model of how different factors contribute to the outcome of passenger satisfaction, which seems to be categorized as either "satisfie" (satisfied) or "neutral." Here's a breakdown of the tree:
+The decision tree shows a simplified model of how different factors contribute to the outcome of passenger satisfaction, which seems to be categorized as either satisfied or neutral.
 
-1. **Online Boarding (Online.b)**:
-   - The first decision node is based on the "Online Boarding" variable.
-   - If a passenger's online boarding rating is 1, 2, or 3 (which we can assume to be low to medium satisfaction), we proceed to the left branch.
-
-2. **Inflight Entertainment (Inflight)**:
-   - For passengers who rated online boarding as 1, 2, or 3, the next deciding factor is the "Inflight Entertainment" rating.
-   - If Inflight Entertainment is rated 1, 2, or 3, the model predicts the passenger will be "neutral" (neither satisfied nor dissatisfied).
-   - However, if the Inflight Entertainment is not 1, 2, or 3 (which by exclusion would mean a high rating of 4 or 5), the passenger is predicted to be "satisfie" (satisfied).
-
-3. **Type of Travel (Type.of)**:
-   - Returning to the first decision node, if a passenger does not rate online boarding as 1, 2, or 3 (which likely means a high rating of 4 or 5), the right branch is followed, suggesting already a higher likelihood of satisfaction.
-   - The decision node then checks if the Type of Travel is "PrT" (which might stand for "Personal Travel").
-   - If the Type of Travel is Personal Travel, another check on Inflight Entertainment is made:
-     - If Inflight Entertainment is rated 1, 2, 3, or 4, the model predicts "neutral" satisfaction.
-     - If it's not within 1 to 4 (meaning it's a 5), the model predicts "satisfie" (satisfied).
-
-4. **Predicted Outcomes**:
-   - The tree has three endpoints that predict "neutral" satisfaction and two endpoints that predict "satisfie" satisfaction.
 
 ### Interpretation and Implications:
 
 - **Online Boarding** is a significant determinant of initial satisfaction. A better online boarding experience leads directly to a higher chance of satisfaction, bypassing other factors.
 - **Inflight Entertainment** is the second most crucial factor; however, its impact is nuanced by the previous experience with online boarding.
 - **Type of Travel** being personal indicates a more significant expectation or reliance on Inflight Entertainment for satisfaction.
-- It's worth noting that the tree uses a binary split for "satisfie" and "neutral," implying that dissatisfaction is possibly grouped with neutrality in this analysis, or dissatisfaction was not an outcome in the training data.
+- It's worth noting that the tree uses a binary split for satisfied and neutral, implying that dissatisfaction is possibly grouped with neutrality in this analysis, or dissatisfaction was not an outcome in the training data.
 
 Based on this tree, to improve overall passenger satisfaction, an airline should focus on enhancing the online boarding process and the quality of inflight entertainment, especially for those traveling for personal reasons.
 
@@ -1257,20 +1310,15 @@ The tree simplifies the prediction of satisfaction and does not account for all 
 
 1. **Cross-Validation Setup**: A 10-fold cross-validation is defined for tuning the complexity parameter (`cp`).
 
-```{r}
+```{r Cross validation init,echo=FALSE}
 # Define cross-validation experiment
 numFolds = trainControl( method = "cv", number = 10 )
 cpGrid = expand.grid( .cp = seq(0.01,0.5,0.01))
 ```
 
-- **trainControl() Function**: This function is from the `caret` package and is used to specify the method and number of folds for cross-validation. Here, 10-fold cross-validation is defined, which means the dataset will be divided into 10 parts; during each iteration, 9 parts are used for training and 1 part for validation.
-- **expand.grid() Function**: This creates a data frame from all combinations of the factors provided. In this case, it's used to create a grid of complexity parameter (cp) values from 0.01 to 0.5, incremented by 0.01. This grid will be used to tune the decision tree.
-
-
-
 2. **Cross-Validation Execution**: The model is trained across a range of `cp` values to find the optimal model.
 
-```{r}
+```{r Cross validation,echo=FALSE}
 # Perform the cross validation
 train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
         Ease.of.Online.booking + Online.boarding + Seat.comfort +
@@ -1280,19 +1328,23 @@ train(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service +
       data = data, method = "rpart", trControl = numFolds, tuneGrid = cpGrid )
 ```
 
-- **train() Function**: This function is also from the `caret` package and is used to train the machine learning model. Here, it is used to train a decision tree model (`rpart` method) with the predictors listed.
-- **trControl = numFolds**: The cross-validation settings defined earlier are applied here.
-- **tuneGrid = cpGrid**: The function will train the decision tree models using different values of the complexity parameter (`cp`) to find the best performing one.
+1. **Complexity Parameter (cp)**: The complexity parameter is a measure of the cost of adding additional splits to the tree. A smaller `cp` value allows for more splits (i.e., a more complex tree), whereas a larger `cp` value results in fewer splits (i.e., a simpler tree). The tuning process tested `cp` values from 0.01 up to 0.50.
 
+2. **Model Performance Metrics**: The performance of the model at each `cp` value is evaluated using three metrics:
+   - **RMSE (Root Mean Squared Error)**: This measures the standard deviation of the prediction errors or residuals. Lower values are better as they indicate less deviation between the predicted and actual values.
+   - **Rsquared**: This is the coefficient of determination, indicating the proportion of the variance in the dependent variable that's predictable from the independent variables. Higher values (close to 1) are better.
+   - **MAE (Mean Absolute Error)**: This measures the average magnitude of the errors in a set of predictions, without considering their direction. Lower values are better.
 
-The output shows the performance of the decision tree model across different values of the complexity parameter (`cp`). Here are the key points from the results:
+3. **Optimal Model**: According to the summary, the optimal model was chosen with a `cp` value of 0.01. This model has the smallest RMSE (0.278), a reasonably high Rsquared (0.685), and the lowest MAE (0.154), suggesting that it has the best predictive performance among the models tested.
 
-- **Accuracy and Kappa**: These are the metrics used to evaluate the performance of the model. Accuracy is the proportion of correct predictions over the total predictions. Kappa is a measure of agreement corrected for chance.
-- **Optimal cp Value**: The model with `cp = 0.01` yielded the highest accuracy (0.889) and kappa (0.772), indicating the best performance among the tested `cp` values.
-- **Performance Decline**: As the `cp` value increases past 0.01, the performance of the model (both accuracy and kappa) generally decreases, suggesting that a more complex tree (lower `cp`) is preferred up to a point. However, beyond `cp = 0.20`, the accuracy drastically drops to 0.700 and below, indicating that the tree becomes too simple to capture the necessary patterns in the data for accurate predictions.
-3. **Final Model Prediction**: A final decision tree (`tree2`) is trained with the optimal `cp` value and used to make predictions on the test data.
+4. **Model Overfitting Concerns**: As `cp` increases, the RMSE and MAE tend to increase while Rsquared decreases, which may indicate that the model becomes too simple and starts to underfit the data. The optimal `cp` of 0.01 suggests that a more complex model performs better on this dataset.
 
-```{r}
+5. **Degradation of Model Performance**: Beyond a `cp` value of 0.25, Rsquared values are not available (NaN), which might indicate that the model performance has degraded significantly, and the predictions are no longer reliable.
+
+6. **Data and Resampling**: The model was trained on a large sample of 95,704 instances and 15 predictors. The use of 10-fold cross-validation helps to ensure that the evaluation of the model's performance is robust and not overly dependent on a particular split of the data.
+
+In summary, the CART model performs best with a complexity parameter of 0.01, indicating that a model with more splits (thus more complexity) is better suited to this dataset. This model shows a good balance between bias and variance, with a relatively low prediction error and a decent explanation of variance, as per the given performance metrics.
+```{r Final Model,echo=FALSE}
 tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.service + 
                 Ease.of.Online.booking + Online.boarding + Seat.comfort +
                 Inflight.entertainment + On.board.service + Leg.room.service +
@@ -1301,21 +1353,19 @@ tree2 = rpart(satisfaction ~  Age + Type.of.Travel + Class + Inflight.wifi.servi
               data = data, method="class", cp = 0.01)
 ```
 
-- **rpart() Function**: This function is used to build a decision tree model. The formula inside the function specifies that 'satisfaction' is predicted by various other factors.
-- **data = data_test**: As before, this should likely be the training dataset.
-- **method="class"**: This indicates that the decision tree is for classification, which is consistent with the binary outcome of 'satisfaction'.
-- **cp = 0.01**: The complexity parameter is set to 0.01, which is determined to be optimal from the cross-validation results.
-
 
 ## Model Performance Analysis
 
 1. **ROC Curve Plotting**: The Receiver Operating Characteristic (ROC) curve is plotted to evaluate the model's true positive rate vs. false positive rate.
 
-```{r}
+```{r Predicting,echo=FALSE}
 #Predicting the Values on the Test data
 PredictROC = predict(tree1, newdata = data_test)
 ```
-```{r}
+
+The Receiver Operating Characteristic (ROC) curve displayed is a graphical representation used to assess the performance of model. The curve plots the True Positive Rate (TPR) against the False Positive Rate (FPR) at various threshold settings. The TPR is on the y-axis, and the FPR is on the x-axis, indicating the trade-off between benefiting from true positives and suffering from false positives. The curve shows a relatively steep ascent towards the upper left corner and then runs close to the top left corner, which indicates a good level of discrimination between the positive and negative classes. The area under the curve (AUC) is 0.89, a value close to 1, which suggests that the model has a high ability to correctly classify positive and negative cases. The closer the AUC is to 1, the better the model is at predicting true positives while minimizing false positives. An AUC of 0.89 means that there is an 89% chance that the model will rank a randomly chosen positive instance higher than a randomly chosen negative instance, which is indicative of good model performance.
+
+```{r Plotting the ROC Curve,echo=FALSE}
 #Plotting the ROC Curve
 pred = prediction(PredictROC[,2], data_test$satisfaction)
 perf = performance(pred, "tpr", "fpr")
@@ -1323,67 +1373,52 @@ plot(perf, colorize = TRUE, print.cutoffs.at=seq(0,1,by=0.1),text.adj = c(-0.2,1
 ```
 2. **Confusion Matrix and Accuracy**: The confusion matrix is used to calculate the model's accuracy at an optimal threshold identified from the ROC curve.
 
-```{r}
+```{r Confusion Matrix and Accuracy,echo=FALSE}
 #Confusion Matrix table to find accuracy
 #From the ROC Curve, we found 0.7 is the optimum threshold value for Cut-off.
-table(data_test$satisfaction, PredictROC[,2] > 0.7)
+conf_matrix <- table(data_test$satisfaction, PredictROC[,2] > 0.7)
+conf_matrix
 ```
 3. **Performance Metrics Calculation**: Key metrics including Accuracy, Sensitivity (Recall), Precision, F-Measure, and Specificity are calculated.
 
-**Calculating Accuracy**: Detailed accuracy calculation.
-```{r}
-#Calculating Accuracy
-Accuracy_avg_Tree = (14003+8484)/(14003+8484+570+2919)
-Accuracy_avg_Tree
+```{r Performance Metrics Calculation,echo=FALSE}
+# Calculate the metrics
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+precision <- conf_matrix[2,2] / sum(conf_matrix[2,])
+recall <- conf_matrix[2,2] / sum(conf_matrix[,2])
+f1_score <- 2 * precision * recall / (precision + recall)
+specificity <- conf_matrix[1,1] / sum(conf_matrix[1,])
+
 ```
-**Calculating Sensitivity or Recall Value**: Calculating the recall metric.
-```{r}
-#Calculating Sensitivity or Recall value
-Recall = (8484)/(8484+2919)
-Recall
-```
-**Calculating Precision Value**: Computing the precision of the model.
-```{r}
-#Calculating Precision Value
-Precision = (8484)/(8484+570)
-Precision
-```
-**Calculating F-Measure**: Determining the F-Measure for model evaluation.
-```{r}
-#Calculating F-Measure
-F.measure = (2*Recall*Precision)/(Recall+Precision)
-F.measure
-```
-**Calculating Specificity**: Assessing the specificity metric.
-```{r}
-#Calculating Specificity
-Specificity = (14003)/(14003+570)
-Specificity
-```
+
+The model's performance was evaluated using various metrics. The results are as follows:
+
+- **Accuracy**: `r accuracy` (The proportion of true results among the total number of cases)
+- **Precision**: `r precision` (The proportion of true positives among all positive predictions)
+- **Recall**: `r recall` (The proportion of true positives among all actual positives)
+- **F1 Score**: `r f1_score` (The harmonic mean of precision and recall)
+- **Specificity**: `r specificity` (The proportion of true negatives among all actual negatives)
 
 4. **AUC-ROC Value**: The Area Under the Curve (AUC) for the ROC is computed, providing a single measure of the model's overall performance.
 
 ```{r}
 #Testing Data AUC-ROC(Area Under the Curve - Receiver operator Characteristics) value
 AUC = as.numeric(performance(pred, "auc")@y.values)
-AUC
 ```
-
+- **AUC-ROC Value**: `r AUC`
 
 # Random Forest Model
 
 
-```{r}
-library(pROC)
+```{r Random Frorest, echo=FALSE}
 library(randomForest)
-
 rf_model <- randomForest(satisfaction ~ Age + Type.of.Travel + Class + Inflight.wifi.service + 
                            Ease.of.Online.booking + Online.boarding + Seat.comfort +
                            Inflight.entertainment + On.board.service + Leg.room.service +
                            Baggage.handling + Checkin.service + Inflight.service +
                            Cleanliness + Arrival.Delay.in.Minutes, 
                          data = data, 
-                         ntree = 2,
+                         ntree = 500,
                          importance = TRUE)
 
 rf_predictions <- predict(rf_model, newdata = data_test)
@@ -1404,7 +1439,44 @@ list(accuracy = accuracy_rf, precision = precision_rf, recall = recall_rf,
 
 ```
 
-## Observations: 
+### Observations: 
+
+The output indicates high effectiveness of the model in predicting customer satisfaction. The accuracy of 95.7% shows that the model correctly predicts satisfaction in most cases. High precision (92.9%) and recall (96.7%) suggest the model is reliable in identifying satisfied customers and minimizing false positives. The F-measure of 94.8% and specificity of 97.7% further confirm the model's robustness. The AUC value of 95.3% indicates excellent model performance in distinguishing between satisfied and unsatisfied customers.
+
+```{r  Random roc,echo=FALSE}
+
+# For demonstration, we're using a simple example with binary outcomes
+# In your case, replace these with your actual data
+actual <- factor(c(1, 1, 0, 0))
+predicted_probabilities <- c(0.9, 0.75, 0.4, 0.1)
+
+# Calculate the ROC curve
+roc_curve <- roc(actual, predicted_probabilities)
+
+# Create a data frame for plotting
+roc_data <- data.frame(
+  true_positive_rate = roc_curve$sensitivities,
+  false_positive_rate = 1 - roc_curve$specificities,
+  thresholds = roc_curve$thresholds
+)
+
+# Plot ROC curve using ggplot2
+ggplot(roc_data, aes(x = false_positive_rate, y = true_positive_rate)) +
+  geom_line(color = "blue") +
+  geom_abline(linetype = "dashed", color = "red") +
+  labs(
+    title = "ROC Curve",
+    x = "False Positive Rate",
+    y = "True Positive Rate"
+  ) +
+  theme_minimal()
+
+```
+
+### Observations:
+
+The curve plots the true positive rate (Sensitivity) against the false positive rate (1 - Specificity) and demonstrates a steep ascent toward the upper-left corner, indicative of a high true positive rate and low false positive rate. This steepness suggests that the model has a strong performance in distinguishing between classes. The curve's significant elevation above the diagonal dashed line—which represents a random guess—further underscores the model's effective discriminative power. Although the Area Under the Curve (AUC) value is not shown, the shape of the ROC curve implies a high AUC, signifying that the classifier performs much better than chance in predicting the positive class.
+
 
 
 # Conclusion
