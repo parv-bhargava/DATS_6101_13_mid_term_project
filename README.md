@@ -1,4 +1,4 @@
-# DATS_6101_13_mid_term_project
+# AirScore
 
 ## Problem Statement:
 
