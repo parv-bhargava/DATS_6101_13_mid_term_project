@@ -1,4 +1,4 @@
-# AirScore
+# [AirScore](https://parv-bhargava.github.io/air-score/)
 
 ## Problem Statement:
 
